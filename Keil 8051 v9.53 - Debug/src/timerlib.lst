@@ -1,0 +1,126 @@
+C51 COMPILER V9.53.0.0   TIMERLIB                                                          04/10/2017 20:12:59 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE TIMERLIB
+OBJECT MODULE PLACED IN .\src/timerlib.OBJ
+COMPILER INVOKED BY: Z:\home\hexafraction\SimplicityStudio_v4\developer\toolchains\keil_8051\9.53\BIN\C51.exe /home/hexa
+                    -fraction/SimplicityStudio/v4_workspace/timerlib/src/timerlib.c OMF2 SMALL DEBUG OBJECTEXTEND ROM(LARGE) WARNINGLEVEL(2) 
+                    -FLOATFUZZY(3) OPTIMIZE(8,SPEED) DEFINE(DEBUG=1) INTVECTOR(0X0000) INTPROMOTE INCDIR(/home/hexafraction/SimplicityStudio_
+                    -v4/developer/sdks/8051/v4.0.3//Device/shared/si8051base;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.
+                    -3//Device/EFM8BB3/inc;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/common/drivers/efm8_memory
+                    -_lcd/inc;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/common/drivers/efm8_memory_lcd/inc/grap
+                    -hics;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/common/drivers/efm8_memory_lcd/inc/config;/
+                    -home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/common/bsp;/home/hexafraction/SimplicityStudio_v4
+                    -/developer/sdks/8051/v4.0.3//kits/EFM8BB3_SLSTK2022A/config;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v
+                    -4.0.3//Device/EFM8BB3/peripheral_driver/inc) PRINT(.\src/timerlib.lst) COND PAGEWIDTH(120) PAGELENGTH(65) OBJECT(.\src/t
+                    -imerlib.OBJ)
+
+line level    source
+
+   1          /*
+   2           * timerlib.c
+   3           *
+   4           *  Created on: Apr 7, 2017
+   5           *      Author: hexafraction
+   6           */
+   7          #include <SI_EFM8BB3_Register_Enums.h>
+   8          #include <SI_EFM8BB3_Defs.h>
+   9          volatile bool timerEnabled = false;
+  10          volatile long millisElapsed = 0;
+  11          volatile int reset_low = 0;
+  12          volatile int reset_high = 0;
+  13          
+  14          unsigned char TCON_SAVE;
+  15          unsigned char TMOD_SAVE;
+  16          
+  17          // puts system into 24.5MHz/32 clock
+  18          void setupSysClock(){
+  19   1              CLKSEL = 0x50; // 0b01010000, meaning reset divider ready flag, divide by 32, source is HFOSC0 (24.5MHz)
+  20   1              // actual system clock ends up being 765.625kHz
+  21   1              reset_low = 255-254; // 766%256
+  22   1              reset_high = 255-3; // 766/256, trunc
+  23   1      }
+  24          
+  25          // overwrites state of timer 0
+  26          #pragma disable // we probably don't want interrupts happening in the middle of all this
+  27          void setupTimer(){
+  28   1              setupSysClock();
+  29   1              TCON_SAVE = TCON;
+  30   1              TMOD_SAVE = TMOD;
+  31   1              TCON = (TMOD & 0xCC); // keep timer 1 setting, zero all timer 0 bits (disabling and clearing its interrup
+             -t flags)
+  32   1              TMOD = (TMOD & 0xF0) | (0x01); // keep timer 1 mode setting, set timer 1 to disable gate, TIMER mode, and
+             - mode 1.
+  33   1              millisElapsed = 0;
+  34   1              timerEnabled = false;
+  35   1              IE_ET0 = 0; // don't enable interrupts just yet
+  36   1      }
+  37          
+  38          // disable interrupts since we don't know whether writing to a 32-bit volatile integer is atomic
+  39          #pragma disable
+  40          long getElapsedMillis(){
+  41   1              return millisElapsed;
+  42   1      }
+  43          
+  44          // disable the internal flag we use to track consistency, and restore the original TCON and TMOD registers
+C51 COMPILER V9.53.0.0   TIMERLIB                                                          04/10/2017 20:12:59 PAGE 2   
+
+             -.
+  45          void tearDownTimer(){
+  46   1              timerEnabled = false;
+  47   1              TCON = TCON_SAVE;
+  48   1              TMOD = TMOD_SAVE;
+  49   1      }
+  50          
+  51          
+  52          void resetTimer(){
+  53   1              bit ET0_SAVE = IE_ET0; // save interrupt control state...
+  54   1              IE_ET0 = 0; // ... and stop the timer.
+  55   1              TL0 = reset_low; // reset the timer's internal count
+  56   1              TH0 = reset_high;
+  57   1              IE_ET0 = ET0_SAVE; // and restart it if it was started.
+  58   1              millisElapsed = 0; // and reset our count
+  59   1      }
+  60          
+  61          // enable the run flag, and the interrupt.
+  62          void startTimer(){
+  63   1              timerEnabled = true;
+  64   1              IE_ET0 = 1;
+  65   1              TCON_TR0 = 1;
+  66   1      }
+  67          
+  68          // disable the run flag and the interrupt.
+  69          void stopTimer(){
+  70   1              timerEnabled = false;
+  71   1              IE_ET0 = 0;
+  72   1              TCON_TR0 = 0;
+  73   1      }
+  74          
+  75          // the ISR itself.
+  76          /*SI_INTERRUPT (TIMERLIB_TICK, TIMER0_IRQn) {
+  77                  if(!timerEnabled) return;
+  78                  else {
+  79                          millisElapsed = millisElapsed + 1;
+  80                          TH0 = reset_high;
+  81                          TL0 = reset_low;
+  82                  }
+  83          }
+  84          */
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    133    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     10    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1       1
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

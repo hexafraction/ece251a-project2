@@ -1,0 +1,143 @@
+AX51 MACRO ASSEMBLER  TIMER_COUNTDOWN                                                       04/10/17 19:25:30 PAGE     1
+
+
+MACRO ASSEMBLER AX51 V3.12.0.0
+OBJECT MODULE PLACED IN .\src\timer_countdown.OBJ
+ASSEMBLER INVOKED BY: Z:\home\hexafraction\SimplicityStudio_v4\developer\toolchains\keil_8051\9.53\BIN\AX51.exe /home/he
+                      xafraction/SimplicityStudio/v4_workspace/timerlib/src/timer_countdown.SRC ERRORPRINT SET(SMALL) DE
+                      BUG MACRO NOMOD51 INCDIR(/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//Device
+                      /shared/si8051base;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//Device/EFM8B
+                      B3/inc;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/common/drivers/efm8
+                      _memory_lcd/inc;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/common/dri
+                      vers/efm8_memory_lcd/inc/graphics;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.
+                      3//kits/common/drivers/efm8_memory_lcd/inc/config;/home/hexafraction/SimplicityStudio_v4/developer
+                      /sdks/8051/v4.0.3//kits/common/bsp;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0
+                      .3//kits/EFM8BB3_SLSTK2022A/config;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0
+                      .3//Device/EFM8BB3/peripheral_driver/inc) PRINT(.\src\timer_countdown.lst) COND SYMBOLS PAGEWIDTH(
+                      120) PAGELENGTH(65) OBJECT(.\src\timer_countdown.OBJ) 
+
+LOC    OBJ             LINE     SOURCE
+
+                          1     ; /home/hexafraction/SimplicityStudio/v4_workspace/timerlib/src/timer_countdown.SRC gene
+                               rated from: /home/hexafraction/SimplicityStudio/v4_workspace/timerlib/src/timer_countdown.c
+                          2     ; COMPILER INVOKED BY:
+                          3     ;        Z:\home\hexafraction\SimplicityStudio_v4\developer\toolchains\keil_8051\9.53\BI
+                               N\C51.exe /home/hexafraction/SimplicityStudio/v4_workspace/timerlib/src/timer_countdown.c
+                                OMF2 SMALL DEBUG OBJECTEXTEND ROM(LARGE) WARNINGLEVEL(2) FLOATFUZZY(3) OPTIMIZE(8,SPEED)
+                                DEFINE(DEBUG=1) INTVECTOR(0X0000) INTPROMOTE INCDIR(/home/hexafraction/SimplicityStudio_
+                               v4/developer/sdks/8051/v4.0.3//Device/shared/si8051base;/home/hexafraction/SimplicityStud
+                               io_v4/developer/sdks/8051/v4.0.3//Device/EFM8BB3/inc) PRINT(.\src/timer_countdown.lst) CO
+                               ND PAGEWIDTH(120) PAGELENGTH(65) OBJECT(.\src/timer_countdown.OBJ)
+                          4     
+                          5     
+                          6     NAME    TIMER_COUNTDOWN
+                          7     
+------                    8     ?PR?performCountdown?TIMER_COUNTDOWN     SEGMENT CODE
+                          9     
+                         10     
+                         11     ; #pragma src
+                         12     ; void performCountdown(){
+                         13     
+------                   14             RSEG  ?PR?performCountdown?TIMER_COUNTDOWN
+                         15             PUBLIC  delaySecond
+000000                   16     delaySecond:
+                         17             USING   0
+                         18     ;       nop
+                         19                     ; decrementing a register takes 1 clock
+                         20                     ; we need to burn 765625 clocks, which is 125*125*49
+                         21                     ; Inner loop: Decrement A, use JZ which takes 2 cycles most of the time
+                         22                     ; this makes for 46 nops, dec A, jz
+000000 7F7D              23               MOV R7, #125
+000002                   24               jt_outer:
+000002 747D              25               MOV A, #125
+000004                   26               jt_inner:
+000004 00                27               nop
+000005 00                28               nop
+000006 00                29               nop
+000007 00                30               nop
+000008 00                31               nop ; 5
+000009 00                32               nop
+00000A 00                33               nop
+00000B 00                34               nop
+00000C 00                35               nop
+00000D 00                36               nop ; 10
+00000E 00                37               nop
+AX51 MACRO ASSEMBLER  TIMER_COUNTDOWN                                                       04/10/17 19:25:30 PAGE     2
+
+00000F 00                38               nop
+000010 00                39               nop
+000011 00                40               nop
+000012 00                41               nop ; 15
+000013 00                42               nop
+000014 00                43               nop
+000015 00                44               nop
+000016 00                45               nop
+000017 00                46               nop ; 20
+000018 00                47               nop
+000019 00                48               nop
+00001A 00                49               nop
+00001B 00                50               nop
+00001C 00                51               nop ; 25
+00001D 00                52               nop
+00001E 00                53               nop
+00001F 00                54               nop
+000020 00                55               nop
+000021 00                56               nop ; 30
+000022 00                57               nop
+000023 00                58               nop
+000024 00                59               nop
+000025 00                60               nop
+000026 00                61               nop ; 35
+000027 00                62               nop
+000028 00                63               nop
+000029 00                64               nop
+00002A 00                65               nop
+00002B 00                66               nop ; 40
+00002C 00                67               nop
+00002D 00                68               nop
+00002E 00                69               nop
+00002F 00                70               nop
+000030 00                71               nop ; 45
+000031 00                72               nop ; 46
+000032 14                73               DEC A
+000033 70CF              74               JNZ jt_inner ; continue loop if jt_inner !=0
+000035 1F                75               DEC R7
+000036 EF                76               MOV A, R7
+000037 70C9              77               JNZ jt_outer ; need to have value in A for comparison
+000039 22                78             RET     
+                         79     ; END OF performCountdown
+                         80     
+                         81             PUBLIC performCountdown
+00003A                   82     performCountdown:
+00003A 120000     F      83             CALL delaySecond
+00003D 22                84             RET
+                         85     
+                         86     
+                         87             PUBLIC disableWdt
+00003E                   88     disableWdt:
+                         89             USING 0
+00003E 7597DE            90             MOV 097H,#0DEH
+000041 7597AD            91             MOV 097H,#0ADH
+000044 22                92             RET
+                         93             END
+AX51 MACRO ASSEMBLER  TIMER_COUNTDOWN                                                       04/10/17 19:25:30 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E                                    T Y P E  V A L U E     ATTRIBUTES
+
+?PR?PERFORMCOUNTDOWN?TIMER_COUNTDOWN. .    C  SEG   000045H       REL=UNIT, ALN=BYTE
+DELAYSECOND . . . . . . . . . . . . . .    C  ADDR  0000H     R   SEG=?PR?PERFORMCOUNTDOWN?TIMER_COUNTDOWN
+DISABLEWDT. . . . . . . . . . . . . . .    C  ADDR  003EH     R   SEG=?PR?PERFORMCOUNTDOWN?TIMER_COUNTDOWN
+JT_INNER. . . . . . . . . . . . . . . .    C  ADDR  0004H     R   SEG=?PR?PERFORMCOUNTDOWN?TIMER_COUNTDOWN
+JT_OUTER. . . . . . . . . . . . . . . .    C  ADDR  0002H     R   SEG=?PR?PERFORMCOUNTDOWN?TIMER_COUNTDOWN
+PERFORMCOUNTDOWN. . . . . . . . . . . .    C  ADDR  003AH     R   SEG=?PR?PERFORMCOUNTDOWN?TIMER_COUNTDOWN
+TIMER_COUNTDOWN . . . . . . . . . . . .    -- ----  -------       
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S).

@@ -1,0 +1,93 @@
+; /home/hexafraction/SimplicityStudio/v4_workspace/timerlib/src/timer_countdown.SRC generated from: /home/hexafraction/SimplicityStudio/v4_workspace/timerlib/src/timer_countdown.c
+; COMPILER INVOKED BY:
+;        Z:\home\hexafraction\SimplicityStudio_v4\developer\toolchains\keil_8051\9.53\BIN\C51.exe /home/hexafraction/SimplicityStudio/v4_workspace/timerlib/src/timer_countdown.c OMF2 SMALL DEBUG OBJECTEXTEND ROM(LARGE) WARNINGLEVEL(2) FLOATFUZZY(3) OPTIMIZE(8,SPEED) DEFINE(DEBUG=1) INTVECTOR(0X0000) INTPROMOTE INCDIR(/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//Device/shared/si8051base;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//Device/EFM8BB3/inc) PRINT(.\src/timer_countdown.lst) COND PAGEWIDTH(120) PAGELENGTH(65) OBJECT(.\src/timer_countdown.OBJ)
+
+
+NAME	TIMER_COUNTDOWN
+
+?PR?performCountdown?TIMER_COUNTDOWN     SEGMENT CODE
+
+
+; #pragma src
+; void performCountdown(){
+
+	RSEG  ?PR?performCountdown?TIMER_COUNTDOWN
+	PUBLIC	delaySecond
+delaySecond:
+	USING	0
+; 	nop
+		; decrementing a register takes 1 clock
+		; we need to burn 765625 clocks, which is 125*125*49
+		; Inner loop: Decrement A, use JZ which takes 2 cycles most of the time
+		; this makes for 46 nops, dec A, jz
+	  MOV R7, #125
+	  jt_outer:
+	  MOV A, #125
+	  jt_inner:
+	  nop
+	  nop
+	  nop
+	  nop
+	  nop ; 5
+	  nop
+	  nop
+	  nop
+	  nop
+	  nop ; 10
+	  nop
+	  nop
+	  nop
+	  nop
+	  nop ; 15
+	  nop
+	  nop
+	  nop
+	  nop
+	  nop ; 20
+	  nop
+	  nop
+	  nop
+	  nop
+	  nop ; 25
+	  nop
+	  nop
+	  nop
+	  nop
+	  nop ; 30
+	  nop
+	  nop
+	  nop
+	  nop
+	  nop ; 35
+	  nop
+	  nop
+	  nop
+	  nop
+	  nop ; 40
+	  nop
+	  nop
+	  nop
+	  nop
+	  nop ; 45
+	  nop ; 46
+	  DEC A
+	  JNZ jt_inner ; continue loop if jt_inner !=0
+	  DEC R7
+	  MOV A, R7
+	  JNZ jt_outer ; need to have value in A for comparison
+	RET  	
+; END OF performCountdown
+
+	PUBLIC performCountdown
+performCountdown:
+	CALL delaySecond
+	RET
+
+
+	PUBLIC disableWdt
+disableWdt:
+	USING 0
+	MOV 097H,#0DEH
+	MOV 097H,#0ADH
+	RET
+	END

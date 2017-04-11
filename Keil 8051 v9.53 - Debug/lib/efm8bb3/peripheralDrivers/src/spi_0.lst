@@ -1,0 +1,909 @@
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE SPI_0
+OBJECT MODULE PLACED IN .\lib/efm8bb3/peripheralDrivers/src/spi_0.OBJ
+COMPILER INVOKED BY: Z:\home\hexafraction\SimplicityStudio_v4\developer\toolchains\keil_8051\9.53\BIN\C51.exe /home/hexa
+                    -fraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3/Device/EFM8BB3/peripheral_driver/src/spi_0.c OMF2 SMALL DEBUG OB
+                    -JECTEXTEND ROM(LARGE) WARNINGLEVEL(2) FLOATFUZZY(3) OPTIMIZE(8,SPEED) DEFINE(DEBUG=1) INTVECTOR(0X0000) INTPROMOTE INCDI
+                    -R(/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//Device/shared/si8051base;/home/hexafraction/Simplic
+                    -ityStudio_v4/developer/sdks/8051/v4.0.3//Device/EFM8BB3/inc;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v
+                    -4.0.3//kits/common/drivers/efm8_memory_lcd/inc;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/c
+                    -ommon/drivers/efm8_memory_lcd/inc/graphics;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/commo
+                    -n/drivers/efm8_memory_lcd/inc/config;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/common/bsp;
+                    -/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/EFM8BB3_SLSTK2022A/config;/home/hexafraction/Sim
+                    -plicityStudio_v4/developer/sdks/8051/v4.0.3//Device/EFM8BB3/peripheral_driver/inc) PRINT(.\lib/efm8bb3/peripheralDrivers
+                    -/src/spi_0.lst) COND PAGEWIDTH(120) PAGELENGTH(65) OBJECT(.\lib/efm8bb3/peripheralDrivers/src/spi_0.OBJ)
+
+line level    source
+
+   1          /******************************************************************************
+   2           * Copyright (c) 2015 by Silicon Laboratories Inc. All rights reserved.
+   3           *
+   4           * http://developer.silabs.com/legal/version/v11/Silicon_Labs_Software_License_Agreement.txt
+   5           *****************************************************************************/
+   6          
+   7          #ifndef __EFM8_CONFIG_H__
+   8          #define __EFM8_CONFIG_H__
+   9          
+  10          #define EFM8PDL_SPI0_USE                  1
+  11          #define EFM8PDL_SPI0_USE_BUFFER           1
+  12          #define EFM8PDL_SPI0_USE_FIFO             0
+  13          #define EFM8PDL_SPI0_TX_SEGTYPE           SI_SEG_PDATA
+  14          
+  15          #endif // __EFM8_CONFIG_H__
+  16          
+  17          #include "SI_EFM8BB3_Register_Enums.h"
+  18          #include "spi_0.h"
+  19          
+  20          #if EFM8PDL_SPI0_AUTO_PAGE == 1
+  21          // declare variable needed for autopage enter/exit
+  22          #define DECL_PAGE uint8_t savedPage
+  23          // enter autopage section
+  24          #define SET_PAGE(p)     do                                                    \
+  25                                  {                                                     \
+  26                                    savedPage = SFRPAGE;  /* save current SFR page */   \
+  27                                    SFRPAGE = (p);        /* set SFR page */            \
+  28                                  } while(0)
+  29          // exit autopage section
+  30          #define RESTORE_PAGE(x) do                                                    \
+  31                                  {                                                     \
+  32                                    SFRPAGE = savedPage;  /* restore saved SFR page */  \
+  33                                  } while(0)
+  34          #else
+              #define DECL_PAGE
+              #define SET_PAGE(x)
+              #define RESTORE_PAGE(x)
+              #endif
+  39          
+  40          // SFR page used to access SPI registers
+  41          #define SPI_SFR_PAGE 0x20
+  42          
+  43          // Runtime API
+  44          
+  45          // Flag to indicate if driver should control Nss (chip select)
+  46          static bool useNss  = false;
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 2   
+
+  47          
+  48          // flag to indicate we are in master mode (else slave)
+  49          static bool modeIsMaster = false;
+  50          
+  51          // flag to indicate that init vars (above) are valid.  If they are
+  52          // not valid then a special one-time init will be called to set them
+  53          static bool initIsValid = false;
+  54          
+  55          // ----------------------------------------------------------------------------
+  56          // Initialize internal state variables.  This is used if init API is
+  57          // not called.
+  58          // ----------------------------------------------------------------------------
+  59          static void SPI0_internalInit(void)
+  60          {
+  61   1        // figure out if we are master mode, and using 4-wire or not
+  62   1        modeIsMaster = SPI0CFG & SPI0CFG_MSTEN__MASTER_ENABLED;
+  63   1        useNss = SPI0CN0 & SPI0CN0_NSSMD__FMASK;
+  64   1      
+  65   1        // indicate that init has now been done
+  66   1        initIsValid = true;
+  67   1      }
+  68          
+  69          #if (EFM8PDL_SPI0_AUTO_PAGE == 1)
+  70          // ----------------------------------------------------------------------------
+  71          // Get interrupt flags
+  72          // ----------------------------------------------------------------------------
+  73          uint8_t SPI0_getIntFlags(void)
+  74          {
+  75   1        uint8_t ret;
+  76   1        DECL_PAGE;
+  77   1        SET_PAGE(SPI_SFR_PAGE);
+  78   1        ret = SPI0CN0 & 0xF0;
+  79   1        RESTORE_PAGE();
+  80   1        return ret;
+  81   1      }
+  82          
+  83          // ----------------------------------------------------------------------------
+  84          // Clear specific interrupt flags
+  85          // ----------------------------------------------------------------------------
+  86          void SPI0_clearIntFlags(uint8_t flags)
+  87          {
+  88   1        DECL_PAGE;
+  89   1        SET_PAGE(SPI_SFR_PAGE);
+  90   1        SPI0CN0 = (SPI0CN0 & (~flags | 0x0F));
+  91   1        RESTORE_PAGE();
+  92   1      }
+  93          #endif
+  94          
+  95          // ----------------------------------------------------------------------------
+  96          // Write a byte if transmit buffer is not full.
+  97          // ----------------------------------------------------------------------------
+  98          bool SPI0_writeByte(uint8_t value)
+  99          {
+ 100   1        bool ret = false;
+ 101   1        DECL_PAGE;
+ 102   1      
+ 103   1        SET_PAGE(SPI_SFR_PAGE);
+ 104   1      
+ 105   1        // check to see if transmit buffer is not full
+ 106   1        if (SPI0CN0_TXNF)
+ 107   1        {
+ 108   2          SPI0DAT = value;
+ 109   2          ret = true;
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 3   
+
+ 110   2        }
+ 111   1      
+ 112   1        RESTORE_PAGE();
+ 113   1        return ret;
+ 114   1      }
+ 115          
+ 116          // ----------------------------------------------------------------------------
+ 117          // Write a byte, waiting for transmit buffer to be empty
+ 118          // ----------------------------------------------------------------------------
+ 119          void SPI0_pollWriteByte(uint8_t value)
+ 120          {
+ 121   1        DECL_PAGE;
+ 122   1      
+ 123   1        SET_PAGE(SPI_SFR_PAGE);
+ 124   1      
+ 125   1        // wait for TX empty
+ 126   1        while (!SPI0CN0_TXNF)
+ 127   1        {}
+ 128   1      
+ 129   1        SPI0DAT = value;
+ 130   1      
+ 131   1        RESTORE_PAGE();
+ 132   1      }
+ 133          
+ 134          #if (EFM8PDL_SPI0_AUTO_PAGE == 1)
+ 135          // ----------------------------------------------------------------------------
+ 136          // Read a byte without checking status
+ 137          // ----------------------------------------------------------------------------
+ 138          extern uint8_t SPI0_readByte(void)
+ 139          {
+ 140   1        uint8_t ret;
+ 141   1        DECL_PAGE;
+ 142   1      
+ 143   1        SET_PAGE(SPI_SFR_PAGE);
+ 144   1        ret = SPI0DAT;
+ 145   1        RESTORE_PAGE();
+ 146   1        return ret;
+ 147   1      }
+ 148          #endif
+ 149          
+ 150          // ----------------------------------------------------------------------------
+ 151          // Read a byte, waiting for ther receive buffer to contain at least one byte.
+ 152          // ----------------------------------------------------------------------------
+ 153          uint8_t SPI0_pollReadByte(void)
+ 154          {
+ 155   1        uint8_t ret;
+ 156   1        DECL_PAGE;
+ 157   1      
+ 158   1        SET_PAGE(SPI_SFR_PAGE);
+ 159   1      
+ 160   1        // wait while RX is empty
+ 161   1        while (SPI0CFG & SPI0CFG_RXE__BMASK)
+ 162   1        {}
+ 163   1      
+ 164   1        ret = SPI0DAT;
+ 165   1        RESTORE_PAGE();
+ 166   1      
+ 167   1        return ret;
+ 168   1      }
+ 169          
+ 170          // ----------------------------------------------------------------------------
+ 171          // Perform a multi-byte transfer, waiting for each byte to complete.
+ 172          // ----------------------------------------------------------------------------
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 4   
+
+ 173          uint8_t
+ 174          SPI0_pollTransfer(SI_VARIABLE_SEGMENT_POINTER(pTxBuffer, uint8_t,
+ 175                                                        EFM8PDL_SPI0_TX_SEGTYPE),
+ 176                            SI_VARIABLE_SEGMENT_POINTER(pRxBuffer, uint8_t,
+ 177                                                        EFM8PDL_SPI0_RX_SEGTYPE),
+ 178                            SPI0_TransferDirection_t dir,
+ 179                            uint8_t xferCount)
+ 180          {
+ 181   1        uint8_t txCount = xferCount;
+ 182   1        bool checkNss = false;
+ 183   1        DECL_PAGE;
+ 184   1      
+ 185   1        SET_PAGE(SPI_SFR_PAGE);
+ 186   1      
+ 187   1        // This function is not interrupt driven and if SPI interrupts are
+ 188   1        // enabled, it can cause interference.
+ 189   1        SPI0_disableInt();
+ 190   1      
+ 191   1        // make sure SPI is not already busy
+ 192   1        while (SPI0CFG & SPI0CFG_SPIBSY__BMASK)
+ 193   1        {}
+ 194   1      
+ 195   1        // Check to see if run-time mode variables have been set up
+ 196   1        if (!initIsValid)
+ 197   1        {
+ 198   2          SPI0_internalInit();
+ 199   2        }
+ 200   1      
+ 201   1        // Flush the RX buffer in case something is in there
+ 202   1      #if (EFM8PDL_SPI0_AUTO_PAGE == 1)
+ 203   1        {
+ 204   2          // if auto page is enabled then we dont need to change pages here
+ 205   2          SPI0FCN0 |= SPI0FCN0_RFLSH__FLUSH;
+ 206   2        }
+ 207   1      #else
+                {
+                  // if auto page is not enabled, then we need to change pages for
+                  // this section of code
+                  uint8_t savedPage = SFRPAGE;
+                  SFRPAGE = SPI_SFR_PAGE;
+                  SPI0FCN0 |= SPI0FCN0_RFLSH__FLUSH;
+                  SFRPAGE = savedPage;
+                }
+              #endif
+ 217   1      
+ 218   1        // assert NSS (if used)
+ 219   1        if (modeIsMaster && useNss)
+ 220   1        {
+ 221   2          SPI0CN0_NSSMD0 = 0;
+ 222   2        }
+ 223   1      
+ 224   1        // Wait in loop until the requested number of transfers are complete
+ 225   1        // Note: xferCount tracks the number of bytes received
+ 226   1        while (xferCount)
+ 227   1        {
+ 228   2          // If the transmit buffer is empty and there are still bytes to
+ 229   2          // write, then write a byte out
+ 230   2          if (SPI0CN0_TXNF && txCount)
+ 231   2          {
+ 232   3            // If user provided a write buffer then use that
+ 233   3            if (dir & SPI0_TRANSFER_TX)
+ 234   3            {
+ 235   4              SPI0DAT = *pTxBuffer;
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 5   
+
+ 236   4              ++pTxBuffer;
+ 237   4            }
+ 238   3      
+ 239   3            // else user did not provide write buffer so just use zeroes
+ 240   3            else
+ 241   3            {
+ 242   4              SPI0DAT = 0;
+ 243   4            }
+ 244   3      
+ 245   3            --txCount;
+ 246   3          }
+ 247   2      
+ 248   2          // If the receive buffer is not empty and there are more bytes to read
+ 249   2          if (!(SPI0CFG & SPI0CFG_RXE__BMASK) && xferCount)
+ 250   2          {
+ 251   3            // If user provided RX buffer, then read byte into buffer
+ 252   3            if (dir & SPI0_TRANSFER_RX)
+ 253   3            {
+ 254   4              *pRxBuffer = SPI0DAT;
+ 255   4              ++pRxBuffer;
+ 256   4            }
+ 257   3      
+ 258   3            // else there is no RX buffer so just throw away the incoming byte
+ 259   3            else
+ 260   3            {
+ 261   4              uint8_t dummy = SPI0DAT;
+ 262   4            }
+ 263   3      
+ 264   3            --xferCount;
+ 265   3          }
+ 266   2      
+ 267   2          // If we are in slave mode and 4-wire, then check to make sure
+ 268   2          // slave is selected.  If not it means the spi master stopped
+ 269   2          // the transfer.  Bust out of the polling loop so we dont hang
+ 270   2          // here forever.
+ 271   2          if (!modeIsMaster && useNss)
+ 272   2          {
+ 273   3            // wait for nss to be asserted the first time before we
+ 274   3            // start checking it
+ 275   3            if (!checkNss)
+ 276   3            {
+ 277   4              if ((SPI0CFG & SPI0CFG_SLVSEL__BMASK))
+ 278   4              {
+ 279   5                checkNss = true;
+ 280   5              }
+ 281   4            }
+ 282   3            else
+ 283   3            {
+ 284   4              if (!(SPI0CFG & SPI0CFG_SLVSEL__BMASK))
+ 285   4              {
+ 286   5                break;
+ 287   5              }
+ 288   4            }
+ 289   3          }
+ 290   2        }
+ 291   1      
+ 292   1        // Transfer is done.  Deassert NSS (if used)
+ 293   1        if (modeIsMaster && useNss)
+ 294   1        {
+ 295   2          SPI0CN0_NSSMD0 = 1;
+ 296   2        }
+ 297   1      
+ 298   1        RESTORE_PAGE();
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 6   
+
+ 299   1        return xferCount;
+ 300   1      }
+ 301          
+ 302          // ----------------------------------------------------------------------------
+ 303          // Check if SPI is busy with a transfer in progress.
+ 304          // ----------------------------------------------------------------------------
+ 305          bool SPI0_isBusy(void)
+ 306          {
+ 307   1        uint8_t count = 0;
+ 308   1        bool ret = false;
+ 309   1        DECL_PAGE;
+ 310   1      
+ 311   1        SET_PAGE(SPI_SFR_PAGE);
+ 312   1      
+ 313   1        // the SPI busy bit can drop between bytes so you cant just poll
+ 314   1        // it to find out when all the bytes have been transferred.  Or sometimes
+ 315   1        // you will catch it not set, between bytes when it is really still
+ 316   1        // busy.  To make busy test useful, we need to know when it is done
+ 317   1        // with all bytes.  That is why there is a loop below.
+ 318   1      
+ 319   1        // Read it several times and if the bit is ever marked busy, then
+ 320   1        // return busy indication.
+ 321   1        for (count = 0; count < 3; count++)
+ 322   1        {
+ 323   2          if (SPI0CFG & SPI0CFG_SPIBSY__BMASK)
+ 324   2          {
+ 325   3            ret = true;
+ 326   3          }
+ 327   2        }
+ 328   1      
+ 329   1        // If it makes it through the loops above without find the busy bit
+ 330   1        // then it is not busy.
+ 331   1        RESTORE_PAGE();
+ 332   1        return ret;
+ 333   1      }
+ 334          
+ 335          #if (EFM8PDL_SPI0_AUTO_PAGE == 1)
+ 336          // ----------------------------------------------------------------------------
+ 337          // Check if transmit buffer is full
+ 338          // ----------------------------------------------------------------------------
+ 339          bool SPI0_isTxFull(void)
+ 340          {
+ 341   1        bool ret;
+ 342   1        DECL_PAGE;
+ 343   1      
+ 344   1        SET_PAGE(SPI_SFR_PAGE);
+ 345   1        ret = !SPI0CN0_TXNF;
+ 346   1        RESTORE_PAGE();
+ 347   1        return ret;
+ 348   1      }
+ 349          
+ 350          // ----------------------------------------------------------------------------
+ 351          // Check if slave is selected
+ 352          // ----------------------------------------------------------------------------
+ 353          bool SPI0_isSlaveSelected(void)
+ 354          {
+ 355   1        bool ret;
+ 356   1        DECL_PAGE;
+ 357   1      
+ 358   1        SET_PAGE(SPI_SFR_PAGE);
+ 359   1        ret = SPI0CFG & SPI0CFG_SLVSEL__BMASK;
+ 360   1        RESTORE_PAGE();
+ 361   1        return ret;
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 7   
+
+ 362   1      }
+ 363          
+ 364          // ----------------------------------------------------------------------------
+ 365          // Check if shift register is empty
+ 366          // ----------------------------------------------------------------------------
+ 367          bool SPI0_isShiftEmpty(void)
+ 368          {
+ 369   1        bool ret;
+ 370   1        DECL_PAGE;
+ 371   1      
+ 372   1        SET_PAGE(SPI_SFR_PAGE);
+ 373   1        ret = SPI0CFG & SPI0CFG_SRMT__BMASK;
+ 374   1        RESTORE_PAGE();
+ 375   1        return ret;
+ 376   1      }
+ 377          
+ 378          // ----------------------------------------------------------------------------
+ 379          // Check if receive buffer is empty
+ 380          // ----------------------------------------------------------------------------
+ 381          bool SPI0_isRxEmpty(void)
+ 382          {
+ 383   1        bool ret;
+ 384   1        DECL_PAGE;
+ 385   1      
+ 386   1        SET_PAGE(SPI_SFR_PAGE);
+ 387   1        ret = SPI0CFG & SPI0CFG_RXE__BMASK;
+ 388   1        RESTORE_PAGE();
+ 389   1        return ret;
+ 390   1      }
+ 391          #endif
+ 392          
+ 393          // ----------------------------------------------------------------------------
+ 394          // Initialize the SPI peripheral operating parameters
+ 395          // ----------------------------------------------------------------------------
+ 396          void SPI0_init(SPI0_ClockMode_t clockMode, bool isMasterMode, bool is4wire)
+ 397          {
+ 398   1        DECL_PAGE;
+ 399   1      
+ 400   1        SET_PAGE(SPI_SFR_PAGE);
+ 401   1      
+ 402   1        // Figure out if this driver controls NSS signal (chip select)
+ 403   1        modeIsMaster = isMasterMode;
+ 404   1        useNss = is4wire;
+ 405   1        initIsValid = true;
+ 406   1      
+ 407   1        // disable SPI before configuring
+ 408   1        SPI0CN0_SPIEN = 0;
+ 409   1      
+ 410   1        // Set up the clock mode (phase and polarity), and the
+ 411   1        // master/slave selection
+ 412   1        SPI0CFG = clockMode | (isMasterMode ? SPI0CFG_MSTEN__MASTER_ENABLED
+ 413   1                                            : SPI0CFG_MSTEN__MASTER_DISABLED);
+ 414   1      
+ 415   1        // Set up the NSS mode bits depending on whether 3-wire or 4-wire
+ 416   1        // is used, and whether master or slave mode
+ 417   1        if (is4wire)
+ 418   1        {
+ 419   2          SPI0CN0_NSSMD0 = 1;
+ 420   2          SPI0CN0_NSSMD1 = isMasterMode ? 1 : 0;
+ 421   2        }
+ 422   1        else
+ 423   1        {
+ 424   2          SPI0CN0_NSSMD0 = 0;
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 8   
+
+ 425   2          SPI0CN0_NSSMD1 = 0;
+ 426   2        }
+ 427   1      
+ 428   1        // clear all the interrupt bits and enable the SPI
+ 429   1        SPI0CN0 &= ~0xF0;
+ 430   1        SPI0CN0_SPIEN = 1;
+ 431   1      
+ 432   1        RESTORE_PAGE();
+ 433   1      }
+ 434          
+ 435          // ----------------------------------------------------------------------------
+ 436          // Set the clock divider used to determine SPI clock rate
+ 437          // ----------------------------------------------------------------------------
+ 438          void SPI0_setClockDivider(uint16_t divider)
+ 439          {
+ 440   1        DECL_PAGE;
+ 441   1      
+ 442   1        // constrain input in case user passes a bad value
+ 443   1        if (divider > 512)
+ 444   1        {
+ 445   2          divider = 512;
+ 446   2        }
+ 447   1        if (divider < 2)
+ 448   1        {
+ 449   2          divider = 2;
+ 450   2        }
+ 451   1        // make even value
+ 452   1        divider &= ~1;
+ 453   1      
+ 454   1        // Transform the divider to the form needed by SFR.
+ 455   1        // See equation in the data sheet for more information
+ 456   1        divider /= 2;
+ 457   1        divider -= 1;
+ 458   1      
+ 459   1        // disable SPI before configuring, then update the value
+ 460   1        SET_PAGE(SPI_SFR_PAGE);
+ 461   1        SPI0CN0_SPIEN = 0;
+ 462   1        SPI0CKR = (uint8_t)divider;
+ 463   1        SPI0CN0_SPIEN = 1;
+ 464   1        RESTORE_PAGE();
+ 465   1      }
+ 466          
+ 467          #if (EFM8PDL_SPI0_AUTO_PAGE == 1)
+ 468          // ----------------------------------------------------------------------------
+ 469          // Reset SPI to disabled state.
+ 470          // ----------------------------------------------------------------------------
+ 471          void SPI0_reset(void)
+ 472          {
+ 473   1        DECL_PAGE;
+ 474   1      
+ 475   1        SET_PAGE(SPI_SFR_PAGE);
+ 476   1        SPI0CN0 &= 0x0E;
+ 477   1        IE_ESPI0 = 0;
+ 478   1        RESTORE_PAGE();
+ 479   1      }
+ 480          #endif
+ 481          
+ 482          // ----------------------------------------------------------------------------
+ 483          // Read status of TFRQ
+ 484          // ----------------------------------------------------------------------------
+ 485          bool SPI0_isFifoTxReq(void)
+ 486          {
+ 487   1        bool ret = false;
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 9   
+
+ 488   1        uint8_t savedPage = SFRPAGE;
+ 489   1        SFRPAGE = SPI_SFR_PAGE;
+ 490   1        if (SPI0FCN1 & SPI0FCN1_TFRQ__BMASK)
+ 491   1        {
+ 492   2          ret = true;
+ 493   2        }
+ 494   1        SFRPAGE = savedPage;
+ 495   1        return ret;
+ 496   1      }
+ 497          
+ 498          // ----------------------------------------------------------------------------
+ 499          // Read status of RFRQ
+ 500          // ----------------------------------------------------------------------------
+ 501          bool SPI0_isFifoRxReq(void)
+ 502          {
+ 503   1        bool ret = false;
+ 504   1        uint8_t savedPage = SFRPAGE;
+ 505   1        SFRPAGE = SPI_SFR_PAGE;
+ 506   1        if (SPI0FCN1 & SPI0FCN1_RFRQ__BMASK)
+ 507   1        {
+ 508   2          ret = true;
+ 509   2        }
+ 510   1        SFRPAGE = savedPage;
+ 511   1        return ret;
+ 512   1      }
+ 513          
+ 514          // ----------------------------------------------------------------------------
+ 515          // Get count of bytes in RX fifo
+ 516          // ----------------------------------------------------------------------------
+ 517          uint8_t SPI0_getRxFifoCount(void)
+ 518          {
+ 519   1        uint8_t ret;
+ 520   1        DECL_PAGE;
+ 521   1      
+ 522   1        SET_PAGE(SPI_SFR_PAGE);
+ 523   1        ret = SPI0FCT & SPI0FCT_RXCNT__FMASK;
+ 524   1      
+ 525   1        RESTORE_PAGE();
+ 526   1        return ret;
+ 527   1      }
+ 528          
+ 529          // ----------------------------------------------------------------------------
+ 530          // Get count of bytes in TX fifo
+ 531          // ----------------------------------------------------------------------------
+ 532          uint8_t SPI0_getTxFifoCount(void)
+ 533          {
+ 534   1        uint8_t ret;
+ 535   1        DECL_PAGE;
+ 536   1      
+ 537   1        SET_PAGE(SPI_SFR_PAGE);
+ 538   1        ret = (SPI0FCT & SPI0FCT_TXCNT__FMASK) >> SPI0FCT_TXCNT__SHIFT;
+ 539   1      
+ 540   1        RESTORE_PAGE();
+ 541   1        return ret;
+ 542   1      }
+ 543          
+ 544          // ----------------------------------------------------------------------------
+ 545          // Configure the FIFO operation
+ 546          // ----------------------------------------------------------------------------
+ 547          void SPI0_configureFifo(uint8_t txThreshold, uint8_t rxThreshold,
+ 548                                  uint8_t rxTimeout)
+ 549          {
+ 550   1        uint8_t fifoCtrl;
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 10  
+
+ 551   1        DECL_PAGE;
+ 552   1      
+ 553   1        SET_PAGE(SPI_SFR_PAGE);
+ 554   1      
+ 555   1        // Set the TX and RX threshold fields
+ 556   1        fifoCtrl = SPI0FCN0;
+ 557   1        fifoCtrl &= ~(SPI0FCN0_TXTH__FMASK | SPI0FCN0_RXTH__FMASK);
+ 558   1        fifoCtrl |= ((txThreshold & 3) << SPI0FCN0_TXTH__SHIFT)
+ 559   1                  | ((rxThreshold & 3) << SPI0FCN0_RXTH__SHIFT);
+ 560   1      
+ 561   1        // Only change the RX timeout if in slave mode
+ 562   1        if (!(SPI0CFG & SPI0CFG_MSTEN__BMASK))
+ 563   1        {
+ 564   2          // If non-zero then enable the rx timeout bit, and set the
+ 565   2          // timeout count
+ 566   2          if (rxTimeout)
+ 567   2          {
+ 568   3            fifoCtrl |= SPI0FCN1_RXTOE__ENABLED;
+ 569   3            SPI0CKR = rxTimeout;
+ 570   3          }
+ 571   2      
+ 572   2          // Else rxTimeout is 0, so disable the timeout bit
+ 573   2          else
+ 574   2          {
+ 575   3            fifoCtrl &= ~SPI0FCN1_RXTOE__ENABLED;
+ 576   3          }
+ 577   2        }
+ 578   1        SPI0FCN0 = fifoCtrl;
+ 579   1        RESTORE_PAGE();
+ 580   1      }
+ 581          
+ 582          #if EFM8PDL_SPI0_USE_BUFFER == 1
+ 583          
+ 584          // flag to indicate that RX buffer should be used for buffered transfers
+ 585          static bool useRx = false;
+ 586          
+ 587          // flag to indicate that TX buffer should be used for buffered transfers
+ 588          static bool useTx = false;
+ 589          
+ 590          static uint8_t rxCountRemaining = 0;
+ 591          static uint8_t txCountRemaining = 0;
+ 592          static uint8_t bytesRemaining = 0;
+ 593          static SI_VARIABLE_SEGMENT_POINTER(pTxBuf, uint8_t, EFM8PDL_SPI0_TX_SEGTYPE) = NULL;
+ 594          static SI_VARIABLE_SEGMENT_POINTER(pRxBuf, uint8_t, EFM8PDL_SPI0_RX_SEGTYPE) = NULL;
+ 595          
+ 596          // ----------------------------------------------------------------------------
+ 597          // Set up an interrupt driven SPI transfer.
+ 598          // ----------------------------------------------------------------------------
+ 599          void
+ 600          SPI0_transfer(SI_VARIABLE_SEGMENT_POINTER(pTxBuffer, uint8_t,
+ 601                                                    EFM8PDL_SPI0_TX_SEGTYPE),
+ 602                        SI_VARIABLE_SEGMENT_POINTER(pRxBuffer, uint8_t,
+ 603                                                    EFM8PDL_SPI0_RX_SEGTYPE),
+ 604                        SPI0_TransferDirection_t dir,
+ 605                        uint8_t xferCount)
+ 606          {
+ 607   1        DECL_PAGE;
+ 608   1      
+ 609   1        rxCountRemaining = xferCount;
+ 610   1        txCountRemaining = xferCount;
+ 611   1        bytesRemaining = xferCount;
+ 612   1        pTxBuf = pTxBuffer;
+ 613   1        pRxBuf = pRxBuffer;
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 11  
+
+ 614   1        useRx = dir & SPI0_TRANSFER_RX;
+ 615   1        useTx = dir & SPI0_TRANSFER_TX;
+ 616   1      
+ 617   1        SET_PAGE(SPI_SFR_PAGE);
+ 618   1      
+ 619   1        // Check to see if run-time mode variables have been set up
+ 620   1        if (!initIsValid)
+ 621   1        {
+ 622   2          SPI0_internalInit();
+ 623   2        }
+ 624   1      
+ 625   1        // Flush the RX buffer in case something is in there
+ 626   1      #if (EFM8PDL_SPI0_AUTO_PAGE == 1)
+ 627   1        {
+ 628   2          // if auto page is enabled then we dont need to change pages here
+ 629   2          SPI0FCN0 |= SPI0FCN0_RFLSH__FLUSH;
+ 630   2        }
+ 631   1      #else
+                {
+                  // if auto page is not enabled, then we need to change pages for
+                  // this section of code
+                  uint8_t savedPage = SFRPAGE;
+                  SFRPAGE = SPI_SFR_PAGE;
+                  SPI0FCN0 |= SPI0FCN0_RFLSH__FLUSH;
+                  SFRPAGE = savedPage;
+                }
+              #endif
+ 641   1      
+ 642   1        // Clear all the interrupt flags
+ 643   1        SPI0CN0 &= ~0xF0;
+ 644   1      
+ 645   1        // Set up the interrupt to use the FIFO request levels instead of SPIF
+ 646   1        SPI0FCN1 &= ~SPI0FCN1_SPIFEN__BMASK;
+ 647   1        SPI0FCN0 |= SPI0FCN0_RFRQE__ENABLED;
+ 648   1      
+ 649   1        // assert NSS (if used)
+ 650   1        if (modeIsMaster && useNss)
+ 651   1        {
+ 652   2          SPI0CN0_NSSMD0 = 0;
+ 653   2        }
+ 654   1      
+ 655   1      #if EFM8PDL_SPI0_USE_PIPELINE == 0
+ 656   1        // Write the first byte to get the transfer started
+ 657   1        if (SPI0CN0_TXNF && txCountRemaining)
+ 658   1        {
+ 659   2          // If user provided tx data, then use that
+ 660   2          if (useTx)
+ 661   2          {
+ 662   3            SPI0DAT = *pTxBuf;
+ 663   3            ++pTxBuf;
+ 664   3          }
+ 665   2      
+ 666   2          // Otherwise no tx data, so just stuff zeroes
+ 667   2          else
+ 668   2          {
+ 669   3            SPI0DAT = 0;
+ 670   3          }
+ 671   2          --txCountRemaining;
+ 672   2        }
+ 673   1      #else
+                // Stuff as many bytes as we can in the tx buffer to start.
+                while (SPI0CN0_TXNF && txCountRemaining)
+                {
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 12  
+
+                  // If user provided tx data, then use that
+                  if (useTx)
+                  {
+                    SPI0DAT = *pTxBuf;
+                    ++pTxBuf;
+                  }
+              
+                  // Otherwise no tx data, so just stuff zeroes
+                  else
+                  {
+                    SPI0DAT = 0;
+                  }
+                  --txCountRemaining;
+                }
+              #endif
+ 692   1      
+ 693   1        RESTORE_PAGE();
+ 694   1        // At this point SPI should be running and the rest will be handled
+ 695   1        // in the interrupt service routine
+ 696   1      }
+ 697          
+ 698          // ----------------------------------------------------------------------------
+ 699          // Stop a running SPI transfer.
+ 700          // ----------------------------------------------------------------------------
+ 701          void SPI0_abortTransfer(void)
+ 702          {
+ 703   1        DECL_PAGE;
+ 704   1      
+ 705   1        // Resetting the counters will cause the ISR to ignore any remaining
+ 706   1        // SPI interrupts.
+ 707   1        txCountRemaining = 0;
+ 708   1        rxCountRemaining = 0;
+ 709   1        useTx = false;
+ 710   1        useRx = false;
+ 711   1        pTxBuf = NULL;
+ 712   1        pRxBuf = NULL;
+ 713   1      
+ 714   1        SET_PAGE(SPI_SFR_PAGE);
+ 715   1      
+ 716   1        // drop the chip select if used
+ 717   1        if (modeIsMaster && useNss)
+ 718   1        {
+ 719   2          SPI0CN0_NSSMD0 = 1;
+ 720   2        }
+ 721   1      
+ 722   1        // Flush buffers
+ 723   1        SPI0CN0_SPIEN = 0;
+ 724   1        SPI0FCN0 |= SPI0FCN0_RFLSH__FLUSH | SPI0FCN0_TFLSH__FLUSH;
+ 725   1        SPI0CN0_SPIEN = 1;
+ 726   1      
+ 727   1        RESTORE_PAGE();
+ 728   1      }
+ 729          
+ 730          // ----------------------------------------------------------------------------
+ 731          // Get the number of bytes remaining in the transfer.  This will really
+ 732          // be the number of RX bytes.
+ 733          // ----------------------------------------------------------------------------
+ 734          uint8_t SPI0_bytesRemaining(void)
+ 735          {
+ 736   1        return bytesRemaining;
+ 737   1      }
+ 738          
+ 739          // ----------------------------------------------------------------------------
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 13  
+
+ 740          // Handler for interrupt driven SPI data transfers.
+ 741          // ----------------------------------------------------------------------------
+ 742          SI_INTERRUPT(SPI0_ISR, SPI0_IRQn)
+ 743          {
+ 744   1        uint8_t intFlags;
+ 745   1        uint8_t fifoFlags;
+ 746   1      
+ 747   1        // This device has SFRPAGE autosave so we can change page here and
+ 748   1        // it will automatically be restored when interrupt exits
+ 749   1        SFRPAGE = SPI_SFR_PAGE;
+ 750   1      
+ 751   1        // Get the interrupt flags and then clear any that are pending
+ 752   1        intFlags = SPI0CN0 & 0xF0;
+ 753   1        SPI0CN0 = (SPI0CN0 & (~intFlags | 0x0F));
+ 754   1        // we are not using the normal interrupt flags for anything
+ 755   1        // in this ISR
+ 756   1      
+ 757   1        // Get the FIFO request flags
+ 758   1        fifoFlags = SPI0FCN1;
+ 759   1      
+ 760   1        // If either FIFO request flag is set, it means that there is
+ 761   1        // either more data to read or write, or both.  So just try
+ 762   1        // to read and write as much as we can at this time.
+ 763   1        if (fifoFlags & SPI0FCN1_RFRQ__BMASK)
+ 764   1        {
+ 765   2          // Read bytes as long as the read count is non-zero and there
+ 766   2          // are more bytes in the RX buffer
+ 767   2      #if EFM8PDL_SPI0_USE_PIPELINE == 1
+                  while (rxCountRemaining && !(SPI0CFG & SPI0CFG_RXE__BMASK))
+              #else
+ 770   2          if (rxCountRemaining && !(SPI0CFG & SPI0CFG_RXE__BMASK))
+ 771   2      #endif
+ 772   2          {
+ 773   3            // If the user provided an RX buffer then read a byte into that.
+ 774   3            if (useRx)
+ 775   3            {
+ 776   4              *pRxBuf = SPI0DAT;
+ 777   4              ++pRxBuf;
+ 778   4            }
+ 779   3      
+ 780   3            // Else, user does not care about RX data so do a dummy read.
+ 781   3            else
+ 782   3            {
+ 783   4              uint8_t dummy = SPI0DAT;
+ 784   4            }
+ 785   3            --rxCountRemaining;
+ 786   3      
+ 787   3            // If we get to zero remaining, it means that all the
+ 788   3            // bytes have been transferred.
+ 789   3            if (rxCountRemaining == 0)
+ 790   3            {
+ 791   4              // deassert NSS (if used)
+ 792   4              if (modeIsMaster && useNss)
+ 793   4              {
+ 794   5                SPI0CN0_NSSMD0 = 1;
+ 795   5              }
+ 796   4              // Tell user that the transfer is complete.
+ 797   4              SPI0_transferCompleteCb();
+ 798   4            }
+ 799   3      
+ 800   3            // If there are more RX bytes to receive, then remember the
+ 801   3            // current count to be used by _bytesRemaining()
+ 802   3            else
+C51 COMPILER V9.53.0.0   SPI_0                                                             04/10/2017 19:28:40 PAGE 14  
+
+ 803   3            {
+ 804   4              bytesRemaining = rxCountRemaining;
+ 805   4            }
+ 806   3          }
+ 807   2      
+ 808   2          // Write bytes if there are more TX bytes to send and the
+ 809   2          // TX buffer is not full
+ 810   2      #if EFM8PDL_SPI0_USE_PIPELINE == 1
+                  while (txCountRemaining && SPI0CN0_TXNF)
+              #else
+ 813   2          if (txCountRemaining && SPI0CN0_TXNF)
+ 814   2      #endif
+ 815   2          {
+ 816   3            // If user provided a TX buffer then write the next byte
+ 817   3            if (useTx)
+ 818   3            {
+ 819   4              SPI0DAT = *pTxBuf;
+ 820   4              ++pTxBuf;
+ 821   4            }
+ 822   3      
+ 823   3            // Otherwise user did not provide a buffer so just write a zero.
+ 824   3            else
+ 825   3            {
+ 826   4              SPI0DAT = 0;
+ 827   4            }
+ 828   3            --txCountRemaining;
+ 829   3          }
+ 830   2        }
+ 831   1      
+ 832   1      #if EFM8PDL_SPI0_USE_ERR_CALLBACK == 1
+                // Check for errors and notify user
+                if (intFlags & (SPI0_MODF_IF | SPI0_RXOVR_IF))
+                {
+                  // Note, the RXOVRN bit only happens in slave mode, and the MODF
+                  // bit is not very likely, so in master mode this block will
+                  // probably not ever be used.
+                  SPI0_transferErrorCb(intFlags & (SPI0_MODF_IF | SPI0_RXOVR_IF));
+                }
+              #endif // EFM8PDL_SPI0_USE_ERR_CALLBACK
+ 842   1      }
+ 843          
+ 844          #endif // EFM8PDL_SPI0_USE_BUFFER
+ 845          
+ 846          /** @} (end spi_0_group) */
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    824    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      6      13
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      5      11
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

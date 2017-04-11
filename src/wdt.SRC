@@ -1,0 +1,13 @@
+;  from pg 374 of datasheet
+;?BI?wdtBits SEGMENT BIT
+;RSEG ?BI?wdtBits
+;FLAG: 	DBIT 1
+IE		DATA	0A8H
+EA		BIT		IE.7 ; EA flag A8 bit 7
+;WDTCN DATA 97H
+disableWdt:
+   CLR EA             ; disable all interrupts
+   MOV 097H,#0DEh    ; disable software watchdog timer
+   MOV 097H,#0ADh
+   SETB EA
+   END

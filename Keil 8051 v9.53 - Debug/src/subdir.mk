@@ -5,7 +5,6 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 SRC_UPPER_SRCS += \
 ../src/timer_countdown.SRC \
-../src/timerlib.SRC \
 ../src/wdt.SRC 
 
 C_SRCS += \
@@ -23,19 +22,19 @@ OBJS += \
 src/%.OBJ: ../src/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: Keil 8051 Compiler'
-	wine "/home/hexafraction/SimplicityStudio_v4/developer/toolchains/keil_8051/9.53/BIN/C51" "@$(patsubst %.OBJ,%.__i,$@)" || $(RC)
+	wine "/Applications/Simplicity Studio.app/Contents/Eclipse/developer/toolchains/keil_8051/9.53/BIN/C51" "@$(patsubst %.OBJ,%.__i,$@)" || $(RC)
 	@echo 'Finished building: $<'
 	@echo ' '
 
-src/main.OBJ: /home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3/Device/EFM8BB3/inc/SI_EFM8BB3_Register_Enums.h /home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3/Device/EFM8BB3/inc/SI_EFM8BB3_Defs.h /home/hexafraction/SimplicityStudio/v4_workspace/timerlib/src/timerlib.h /home/hexafraction/SimplicityStudio/v4_workspace/timerlib/src/timer_countdown.h /home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3/kits/common/drivers/efm8_memory_lcd/inc/render.h /home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3/kits/common/drivers/efm8_memory_lcd/inc/disp.h /home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3/kits/common/drivers/efm8_memory_lcd/inc/config/render_config.h
+src/main.OBJ: /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/toolchains/keil_8051/9.53/INC/STDIO.H /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/Device/EFM8BB3/inc/SI_EFM8BB3_Register_Enums.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/Device/EFM8BB3/inc/SI_EFM8BB3_Defs.h /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/src/timerlib.h /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/src/timer_countdown.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/kits/common/drivers/efm8_memory_lcd/inc/render.h /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/lib/bsp/efm8_memory_lcd/inc/render-extended.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/kits/common/drivers/efm8_memory_lcd/inc/disp.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/Device/shared/si8051Base/si_toolchain.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/kits/common/drivers/efm8_memory_lcd/inc/config/render_config.h /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/lib/bsp/efm8_memory_lcd/inc/config/render_config.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/Device/shared/si8051Base/stdint.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/Device/shared/si8051Base/stdbool.h /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/inc/config/memory_lcd_config.h
 
 src/%.OBJ: ../src/%.SRC
 	@echo 'Building file: $<'
 	@echo 'Invoking: Keil 8051 Assembler'
-	wine "/home/hexafraction/SimplicityStudio_v4/developer/toolchains/keil_8051/9.53/BIN/AX51" "@$(patsubst %.OBJ,%.__ia,$@)" || $(RC)
+	wine "/Applications/Simplicity Studio.app/Contents/Eclipse/developer/toolchains/keil_8051/9.53/BIN/AX51" "@$(patsubst %.OBJ,%.__ia,$@)" || $(RC)
 	@echo 'Finished building: $<'
 	@echo ' '
 
-src/timerlib.OBJ: /home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3/Device/EFM8BB3/inc/SI_EFM8BB3_Register_Enums.h /home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3/Device/EFM8BB3/inc/SI_EFM8BB3_Defs.h
+src/timerlib.OBJ: /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/Device/EFM8BB3/inc/SI_EFM8BB3_Register_Enums.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/Device/EFM8BB3/inc/SI_EFM8BB3_Defs.h /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/src/timer_countdown.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/Device/shared/si8051Base/si_toolchain.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/Device/shared/si8051Base/stdint.h /Applications/Simplicity\ Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/Device/shared/si8051Base/stdbool.h
 
 

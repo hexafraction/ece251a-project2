@@ -14,7 +14,10 @@ void setupSysClock();
 void setupTimer();
 long getElapsedMillis();
 void tearDownTimer();
+void resetTimer();
+void stopTimer();
 void startTimer();
+void start();
 
 
 #endif /* TIMERLIB_H_ */

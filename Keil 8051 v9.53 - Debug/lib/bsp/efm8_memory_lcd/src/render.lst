@@ -1,19 +1,20 @@
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 1   
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE RENDER
 OBJECT MODULE PLACED IN .\lib/bsp/efm8_memory_lcd/src/render.OBJ
-COMPILER INVOKED BY: Z:\home\hexafraction\SimplicityStudio_v4\developer\toolchains\keil_8051\9.53\BIN\C51.exe /home/hexa
-                    -fraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3/kits/common/drivers/efm8_memory_lcd/src/render.c OMF2 SMALL DEBU
-                    -G OBJECTEXTEND ROM(LARGE) WARNINGLEVEL(2) FLOATFUZZY(3) OPTIMIZE(8,SPEED) DEFINE(DEBUG=1) INTVECTOR(0X0000) INTPROMOTE I
-                    -NCDIR(/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//Device/shared/si8051base;/home/hexafraction/Sim
-                    -plicityStudio_v4/developer/sdks/8051/v4.0.3//Device/EFM8BB3/inc;/home/hexafraction/SimplicityStudio_v4/developer/sdks/80
-                    -51/v4.0.3//kits/common/drivers/efm8_memory_lcd/inc;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//ki
-                    -ts/common/drivers/efm8_memory_lcd/inc/graphics;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/c
-                    -ommon/drivers/efm8_memory_lcd/inc/config;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/common/
-                    -bsp;/home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/EFM8BB3_SLSTK2022A/config;/home/hexafraction
-                    -/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//Device/EFM8BB3/peripheral_driver/inc) PRINT(.\lib/bsp/efm8_memory_lcd/s
-                    -rc/render.lst) COND PAGEWIDTH(120) PAGELENGTH(65) OBJECT(.\lib/bsp/efm8_memory_lcd/src/render.OBJ)
+COMPILER INVOKED BY: Z:\Applications\Simplicity Studio.app\Contents\Eclipse\developer\toolchains\keil_8051\9.53\BIN\C51.
+                    -exe /Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3/kits/common/drivers/efm8_memory_lcd/
+                    -src/render.c OMF2 SMALL DEBUG OBJECTEXTEND ROM(LARGE) WARNINGLEVEL(2) FLOATFUZZY(3) OPTIMIZE(8,SPEED) DEFINE(DEBUG=1) IN
+                    -TVECTOR(0X0000) INTPROMOTE INCDIR(/Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//Devic
+                    -e/shared/si8051base;/Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//Device/EFM8BB3/inc;
+                    -/Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//kits/common/drivers/efm8_memory_lcd/inc
+                    -;/Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//kits/common/drivers/efm8_memory_lcd/in
+                    -c/graphics;/Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//kits/common/drivers/efm8_mem
+                    -ory_lcd/inc/config;/Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//kits/common/bsp;/App
+                    -lications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//kits/EFM8BB3_SLSTK2022A/config;/Application
+                    -s/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//Device/EFM8BB3/peripheral_driver/inc) PRINT(.\lib/b
+                    -sp/efm8_memory_lcd/src/render.lst) COND PAGEWIDTH(120) PAGELENGTH(65) OBJECT(.\lib/bsp/efm8_memory_lcd/src/render.OBJ)
 
 line level    source
 
@@ -28,8 +29,8 @@ line level    source
    9          #include "bsp.h"
   10          #include "disp.h"
   11          #include "render.h"
-*** WARNING C318 IN LINE 8 OF /home/hexafraction/SimplicityStudio_v4/developer/sdks/8051/v4.0.3//kits/common/drivers/efm
-             -8_memory_lcd/inc/config\render_config.h: can't open file 'memory_lcd_config.h'
+*** WARNING C318 IN LINE 8 OF /Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//kits/comm
+             -on/drivers/efm8_memory_lcd/inc/config\render_config.h: can't open file 'memory_lcd_config.h'
   12          #include <string.h>
   13          
   14          #if RENDER_STR_LINE_BUILD || RENDER_LARGE_STR_LINE_BUILD
@@ -62,9 +63,9 @@ line level    source
   41          
   42          /***************************************************************************//**
   43           * @brief Return the size of the string in pixels
-  44           *
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 2   
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 2   
 
+  44           *
   45           * @param str a null-terminated string
   46           *
   47           * @return The width of a string in pixels as rendered by ::RENDER_StrLine()
@@ -74,7 +75,7 @@ line level    source
   51                  SI_VARIABLE_SEGMENT_POINTER(str, char, RENDER_STR_SEG))
   52          {
   53   1          uint8_t len = 0;
-  54   1          
+  54   1      
   55   1          while (str[len++] != 0);
   56   1          len--;
   57   1      
@@ -127,9 +128,9 @@ line level    source
  104           *        (length = ::DISP_BUF_SIZE; segment = ::RENDER_LINE_SEG)
  105           * @param xstart the starting x-position of the line segment [0, ::DISP_WIDTH)
  106           * @param xstop the stopping x-position of the line segment [0, ::DISP_WIDTH)
- 107           *
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 3   
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 3   
 
+ 107           *
  108           *****************************************************************************/
  109          void RENDER_LineSegmentLine(
  110                  SI_VARIABLE_SEGMENT_POINTER(line, uint8_t, RENDER_LINE_SEG),
@@ -192,9 +193,9 @@ line level    source
  167           * row = 4, col = 3, call:
  168           *
  169           * ~~~{.c}
- 170           * for (y = 0; y < FONT_HEIGHT; y++)
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 4   
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 4   
 
+ 170           * for (y = 0; y < FONT_HEIGHT; y++)
  171           * {
  172           *    RENDER_StrLine(line, 3, y, "TEST");
  173           *    DISP_WriteLine(4+y, line);
@@ -257,9 +258,9 @@ line level    source
               #else
  231   2              *line16 &= ~(0xFF00 >> posx % 8);
  232   2              *line16 |= (((uint16_t)font_byte << 8) >> (posx % 8));
- 233   2      #endif
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 5   
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 5   
 
+ 233   2      #endif
  234   2      
  235   2              str++;
  236   2              posx += FONT_WIDTH;
@@ -322,9 +323,9 @@ line level    source
  293           * @param str a null-terminated string to write
  294           * @param fontScale can be enlarged from 2x to 4x. However, if larger than 5x, this
  295           *        function only renders 4x
- 296           *
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 6   
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 6   
 
+ 296           *
  297           ******************************************************************************/
  298          #if RENDER_LARGE_STR_LINE_BUILD
  299          void RENDER_Large_StrLine(
@@ -387,9 +388,9 @@ line level    source
  356   3                      {
  357   4                              enlarged_font_byte = (enlarged_font_byte >> fontScale);
  358   4                      }
- 359   3                      font_byte = font_byte >> 1;
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 7   
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 7   
 
+ 359   3                      font_byte = font_byte >> 1;
  360   3              }
  361   2      
  362   2              for(i = 0; i < fontScale; i++)  //Number of bytes of a 32 bit variable
@@ -452,9 +453,9 @@ line level    source
  419   3              }
  420   2      
  421   2              font_byte = thinfont_numeric_bits[(c - '/') + thinfont_numeric_width / 8 * posy];
- 422   2      
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 8   
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 8   
 
+ 422   2      
  423   2              enlarged_font_byte = 0;
  424   2              for( i = 0; i < 8; i++) //for every bit in font_byte
  425   2              {
@@ -517,9 +518,9 @@ line level    source
  482           * 00|                        |
  483           * 01|                        |
  484           * 02|      _____             |
- 485           * 03|     |     |< y=WIDTH   |
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 9   
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 9   
 
+ 485           * 03|     |     |< y=WIDTH   |
  486           * 04|     ||--- |            |
  487           * 05|     |   _ |            |
  488           * 06|     ||_| ||            |
@@ -582,9 +583,9 @@ line level    source
  545   1          // specified y-value
  546   1          charIndex = posy / FONT_WIDTH;
  547   1          charRow = posy % FONT_WIDTH;
- 548   1      
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 10  
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 10  
 
+ 548   1      
  549   1          while (str[len++] != 0);
  550   1          len--;
  551   1          
@@ -647,9 +648,9 @@ line level    source
  607                  uint8_t posy,
  608                  SI_VARIABLE_SEGMENT_POINTER(sprite, uint8_t, RENDER_SPRITE_SEG),
  609                  uint8_t spriteWidth)
- 610          {
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 11  
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 11  
 
+ 610          {
  611   1          uint8_t i;
  612   1          uint8_t sprite_byte;
  613   1      
@@ -712,9 +713,9 @@ line level    source
  670                  uint8_t posy,
  671                  SI_VARIABLE_SEGMENT_POINTER(sprite, uint8_t, RENDER_SPRITE_SEG),
  672                  uint8_t spriteWidth)
- 673          {
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 12  
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 12  
 
+ 673          {
  674   1          uint8_t i;
  675   1          uint8_t sprite_byte;
  676   1      
@@ -777,9 +778,9 @@ MODULE INFORMATION:   STATIC OVERLAYABLE
    DATA SIZE        =   ----      60
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
-   EDATA SIZE       =   ----    ----
-C51 COMPILER V9.53.0.0   RENDER                                                            04/10/2017 19:28:00 PAGE 13  
+C51 COMPILER V9.53.0.0   RENDER                                                            04/16/2017 21:13:37 PAGE 13  
 
+   EDATA SIZE       =   ----    ----
    HDATA SIZE       =   ----    ----
    XDATA CONST SIZE =   ----    ----
    FAR CONST SIZE   =   ----    ----

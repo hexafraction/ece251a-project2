@@ -1,0 +1,614 @@
+C51 COMPILER V9.53.0.0   MAIN                                                              04/16/2017 21:15:25 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\src/main.OBJ
+COMPILER INVOKED BY: Z:\Applications\Simplicity Studio.app\Contents\Eclipse\developer\toolchains\keil_8051\9.53\BIN\C51.
+                    -exe /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/src/main.c OMF2 SMALL DEBUG OBJECTEXTEND ROM(LARGE) WARNINGLEV
+                    -EL(2) FLOATFUZZY(3) OPTIMIZE(9,SPEED) DEFINE(NDEBUG=1) INTVECTOR(0X0000) INTPROMOTE INCDIR(/Applications/Simplicity Stud
+                    -io.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//Device/shared/si8051base;/Applications/Simplicity Studio.app/Content
+                    -s/Eclipse/developer/sdks/8051/v4.0.3//Device/EFM8BB3/inc) REGFILE(timerlib.ORC) PRINT(.\src/main.lst) COND PAGEWIDTH(120
+                    -) PAGELENGTH(65) OBJECT(.\src/main.OBJ)
+
+line level    source
+
+   1          //-----------------------------------------------------------------------------
+   2          // Includes
+   3          //-----------------------------------------------------------------------------
+   4          #include <stdio.h>
+   5          #include <SI_EFM8BB3_Register_Enums.h>                // SFR declarations
+   6          #include <SI_EFM8BB3_Defs.h>
+   7          #include "../src/timerlib.h"
+   8          #include "../src/timer_countdown.h"
+   9          #include "render.h"
+*** WARNING C318 IN LINE 9 OF /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/src/main.c: can't open file 'render.
+             -h'
+  10          #include "../lib/bsp/efm8_memory_lcd/inc/render-extended.h"
+*** WARNING C318 IN LINE 8 OF ../lib/bsp/efm8_memory_lcd/inc/config/render_config.h: can't open file 'memory_lcd_config.
+             -h'
+*** WARNING C318 IN LINE 12 OF ../lib/bsp/efm8_memory_lcd/inc/render-extended.h: can't open file 'render.h'
+  11          #include "disp.h"
+*** WARNING C318 IN LINE 11 OF /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/src/main.c: can't open file 'disp.h
+             -'
+  12          //-----------------------------------------------------------------------------
+  13          // main() Routine
+  14          // ----------------------------------------------------------------------------
+  15          //
+  16          // Note: the software watchdog timer is not disabled by default in this
+  17          // example, so a long-running program will reset periodically unless
+  18          // the timer is disabled or your program periodically writes to it.
+  19          //
+  20          // Review the "Watchdog Timer" section under the part family's datasheet
+  21          // for details. To find the datasheet, select your part in the
+  22          // Simplicity Launcher and click on "Data Sheet".
+  23          //
+  24          //-----------------------------------------------------------------------------
+  25          void init(void){
+  26   1      
+  27   1          uint8_t TMR3CN0_TR3_save;
+  28   1               // $[P0 - Port 0 Pin Latch]
+  29   1                // [P0 - Port 0 Pin Latch]$
+  30   1      
+  31   1                // $[P0MDOUT - Port 0 Output Mode]
+  32   1                /*
+  33   1                 // P0.0 output is open-drain
+  34   1                 // P0.1 output is open-drain
+  35   1                 // P0.2 output is open-drain
+  36   1                 // P0.3 output is open-drain
+  37   1                 // P0.4 output is open-drain
+  38   1                 // P0.5 output is open-drain
+  39   1                 // P0.6 output is push-pull
+  40   1                 // P0.7 output is open-drain
+  41   1                 */
+  42   1                P0MDOUT = P0MDOUT_B0__OPEN_DRAIN
+  43   1                          | P0MDOUT_B1__OPEN_DRAIN
+  44   1                          | P0MDOUT_B2__OPEN_DRAIN
+C51 COMPILER V9.53.0.0   MAIN                                                              04/16/2017 21:15:25 PAGE 2   
+
+  45   1                          | P0MDOUT_B3__OPEN_DRAIN
+  46   1                          | P0MDOUT_B4__OPEN_DRAIN
+  47   1                          | P0MDOUT_B5__OPEN_DRAIN
+  48   1                          | P0MDOUT_B6__PUSH_PULL
+  49   1                          | P0MDOUT_B7__OPEN_DRAIN;
+  50   1                // [P0MDOUT - Port 0 Output Mode]$
+  51   1      
+  52   1                // $[P0MDIN - Port 0 Input Mode]
+  53   1                // [P0MDIN - Port 0 Input Mode]$
+  54   1      
+  55   1                // $[P0SKIP - Port 0 Skip]
+  56   1                /*
+  57   1                 // P0.0 pin is skipped by the crossbar
+  58   1                 // P0.1 pin is skipped by the crossbar
+  59   1                 // P0.2 pin is skipped by the crossbar
+  60   1                 // P0.3 pin is skipped by the crossbar
+  61   1                 // P0.4 pin is skipped by the crossbar
+  62   1                 // P0.5 pin is skipped by the crossbar
+  63   1                 // P0.6 pin is not skipped by the crossbar
+  64   1                 // P0.7 pin is not skipped by the crossbar
+  65   1                 */
+  66   1                P0SKIP = P0SKIP_B0__SKIPPED | P0SKIP_B1__SKIPPED | P0SKIP_B2__SKIPPED
+  67   1                         | P0SKIP_B3__SKIPPED
+  68   1                         | P0SKIP_B4__SKIPPED | P0SKIP_B5__SKIPPED
+  69   1                         | P0SKIP_B6__NOT_SKIPPED
+  70   1                         | P0SKIP_B7__NOT_SKIPPED;
+  71   1                // [P0SKIP - Port 0 Skip]$
+  72   1      
+  73   1                // $[P0MASK - Port 0 Mask]
+  74   1                // [P0MASK - Port 0 Mask]$
+  75   1      
+  76   1                // $[P0MAT - Port 0 Match]
+  77   1              // [P0MAT - Port 0 Match]$
+  78   1                // $[P1 - Port 1 Pin Latch]
+  79   1                P1 = P1_B4__LOW
+  80   1                           | P1_B5__LOW
+  81   1                           | P1_B6__LOW;
+  82   1                 // [P1 - Port 1 Pin Latch]$
+  83   1      
+  84   1                 // $[P1MDOUT - Port 1 Output Mode]
+  85   1                 /*
+  86   1                  // P1.0 output is push-pull
+  87   1                  // P1.1 output is open-drain
+  88   1                  // P1.2 output is open-drain
+  89   1                  // P1.3 output is open-drain
+  90   1                  // P1.4 output is push-pull
+  91   1                  // P1.5 output is push-pull
+  92   1                  // P1.6 output is push-pull
+  93   1                  // P1.7 output is open-drain
+  94   1                  */
+  95   1                 P1MDOUT = P1MDOUT_B0__PUSH_PULL
+  96   1                           | P1MDOUT_B1__OPEN_DRAIN
+  97   1                           | P1MDOUT_B2__OPEN_DRAIN
+  98   1                           | P1MDOUT_B3__OPEN_DRAIN
+  99   1                           | P1MDOUT_B4__PUSH_PULL
+ 100   1                           | P1MDOUT_B5__PUSH_PULL
+ 101   1                           | P1MDOUT_B6__PUSH_PULL
+ 102   1                           | P1MDOUT_B7__OPEN_DRAIN;
+ 103   1                 // [P1MDOUT - Port 1 Output Mode]$
+ 104   1      
+ 105   1                 // $[P1MDIN - Port 1 Input Mode]
+ 106   1                 /*
+ 107   1                  // P1.0 pin is configured for digital mode
+C51 COMPILER V9.53.0.0   MAIN                                                              04/16/2017 21:15:25 PAGE 3   
+
+ 108   1                  // P1.1 pin is configured for digital mode
+ 109   1                  // P1.2 pin is configured for digital mode
+ 110   1                  // P1.3 pin is configured for analog mode
+ 111   1                  // P1.4 pin is configured for digital mode
+ 112   1                  // P1.5 pin is configured for digital mode
+ 113   1                  // P1.6 pin is configured for digital mode
+ 114   1                  // P1.7 pin is configured for analog mode
+ 115   1                  */
+ 116   1                 P1MDIN = P1MDIN_B0__DIGITAL | P1MDIN_B1__DIGITAL | P1MDIN_B2__DIGITAL
+ 117   1                          | P1MDIN_B3__ANALOG
+ 118   1                          | P1MDIN_B4__DIGITAL | P1MDIN_B5__DIGITAL
+ 119   1                          | P1MDIN_B6__DIGITAL
+ 120   1                          | P1MDIN_B7__ANALOG;
+ 121   1                 // [P1MDIN - Port 1 Input Mode]$
+ 122   1      
+ 123   1                 // $[P1SKIP - Port 1 Skip]
+ 124   1                 /*
+ 125   1                  // P1.0 pin is not skipped by the crossbar
+ 126   1                  // P1.1 pin is skipped by the crossbar
+ 127   1                  // P1.2 pin is skipped by the crossbar
+ 128   1                  // P1.3 pin is skipped by the crossbar
+ 129   1                  // P1.4 pin is skipped by the crossbar
+ 130   1                  // P1.5 pin is skipped by the crossbar
+ 131   1                  // P1.6 pin is skipped by the crossbar
+ 132   1                  // P1.7 pin is skipped by the crossbar
+ 133   1                  */
+ 134   1                 P1SKIP = P1SKIP_B0__NOT_SKIPPED | P1SKIP_B1__SKIPPED | P1SKIP_B2__SKIPPED
+ 135   1                          | P1SKIP_B3__SKIPPED
+ 136   1                          | P1SKIP_B4__SKIPPED | P1SKIP_B5__SKIPPED
+ 137   1                          | P1SKIP_B6__SKIPPED
+ 138   1                          | P1SKIP_B7__SKIPPED;
+ 139   1                 // [P1SKIP - Port 1 Skip]$
+ 140   1      
+ 141   1                 // $[P1MASK - Port 1 Mask]
+ 142   1                 // [P1MASK - Port 1 Mask]$
+ 143   1      
+ 144   1                 // $[P1MAT - Port 1 Match]
+ 145   1                 // [P1MAT - Port 1 Match]$
+ 146   1                 P1MAT = P1MAT_B4__HIGH | P1MAT_B5__HIGH |P1MAT_B6__HIGH ;
+ 147   1      
+ 148   1                // $[XBR2 - Port I/O Crossbar 2]
+ 149   1      
+ 150   1                 // $[P2 - Port 2 Pin Latch]
+ 151   1                 // [P2 - Port 2 Pin Latch]$
+ 152   1      
+ 153   1                 // $[P2MDOUT - Port 2 Output Mode]
+ 154   1                 /*
+ 155   1                  // P2.0 output is open-drain
+ 156   1                  // P2.1 output is open-drain
+ 157   1                  // P2.2 output is open-drain
+ 158   1                  // P2.3 output is push-pull
+ 159   1                  // P2.4 output is open-drain
+ 160   1                  // P2.5 output is open-drain
+ 161   1                  // P2.6 output is push-pull
+ 162   1                  */
+ 163   1                 P2MDOUT = P2MDOUT_B0__OPEN_DRAIN
+ 164   1                           | P2MDOUT_B1__OPEN_DRAIN
+ 165   1                           | P2MDOUT_B2__OPEN_DRAIN
+ 166   1                           | P2MDOUT_B3__PUSH_PULL
+ 167   1                           | P2MDOUT_B4__OPEN_DRAIN
+ 168   1                           | P2MDOUT_B5__OPEN_DRAIN
+ 169   1                           | P2MDOUT_B6__PUSH_PULL;
+ 170   1                 // [P2MDOUT - Port 2 Output Mode]$
+C51 COMPILER V9.53.0.0   MAIN                                                              04/16/2017 21:15:25 PAGE 4   
+
+ 171   1      
+ 172   1                 // $[P2MDIN - Port 2 Input Mode]
+ 173   1                 // [P2MDIN - Port 2 Input Mode]$
+ 174   1      
+ 175   1                 // $[P2SKIP - Port 2 Skip]
+ 176   1                 /*
+ 177   1                  // P2.0 pin is not skipped by the crossbar
+ 178   1                  // P2.1 pin is not skipped by the crossbar
+ 179   1                  // P2.2 pin is not skipped by the crossbar
+ 180   1                  // P2.3 pin is skipped by the crossbar
+ 181   1                  */
+ 182   1                 SFRPAGE = 0x20;
+ 183   1                 P2SKIP = P2SKIP_B0__NOT_SKIPPED
+ 184   1                          | P2SKIP_B1__NOT_SKIPPED
+ 185   1                          | P2SKIP_B2__NOT_SKIPPED
+ 186   1                          | P2SKIP_B3__SKIPPED;
+ 187   1                 // [P2SKIP - Port 2 Skip]$
+ 188   1      
+ 189   1                 // $[P2MASK - Port 2 Mask]
+ 190   1                 // [P2MASK - Port 2 Mask]$
+ 191   1      
+ 192   1                 // $[P2MAT - Port 2 Match]
+ 193   1               // [P2MAT - Port 2 Match]$
+ 194   1      
+ 195   1                 /*
+ 196   1                  // Weak Pullups enabled
+ 197   1                  // Crossbar enabled
+ 198   1                  // UART1 I/O unavailable at Port pin
+ 199   1                  // UART1 RTS1 unavailable at Port pin
+ 200   1                  // UART1 CTS1 unavailable at Port pin
+ 201   1                  */
+ 202   1                 SFRPAGE = 0x00;
+ 203   1                 XBR2 = XBR2_WEAKPUD__PULL_UPS_ENABLED
+ 204   1                        | XBR2_XBARE__ENABLED
+ 205   1                        | XBR2_URT1E__DISABLED
+ 206   1                        | XBR2_URT1RTSE__DISABLED
+ 207   1                        | XBR2_URT1CTSE__DISABLED;
+ 208   1                 // [XBR2 - Port I/O Crossbar 2]$
+ 209   1      
+ 210   1                 // $[PRTDRV - Port Drive Strength]
+ 211   1                 // [PRTDRV - Port Drive Strength]$
+ 212   1      
+ 213   1                 // $[XBR0 - Port I/O Crossbar 0]
+ 214   1                 /*
+ 215   1                  // UART0 I/O unavailable at Port pin
+ 216   1                  // SPI I/O routed to Port pins. The SPI can be assigned either 3 or 4
+ 217   1                  //     GPIO pins
+ 218   1                  // SMBus 0 I/O unavailable at Port pins
+ 219   1                  // CP0 unavailable at Port pin
+ 220   1                  // Asynchronous CP0 unavailable at Port pin
+ 221   1                  // CP1 unavailable at Port pin
+ 222   1                  // Asynchronous CP1 unavailable at Port pin
+ 223   1                  // SYSCLK unavailable at Port pin
+ 224   1                  */
+ 225   1                 XBR0 = XBR0_URT0E__DISABLED | XBR0_SPI0E__ENABLED | XBR0_SMB0E__DISABLED
+ 226   1                        | XBR0_CP0E__DISABLED
+ 227   1                        | XBR0_CP0AE__DISABLED | XBR0_CP1E__DISABLED
+ 228   1                        | XBR0_CP1AE__DISABLED
+ 229   1                        | XBR0_SYSCKE__DISABLED;
+ 230   1                 // [XBR0 - Port I/O Crossbar 0]$
+ 231   1      
+ 232   1                 // $[XBR1 - Port I/O Crossbar 1]
+ 233   1                 /*
+C51 COMPILER V9.53.0.0   MAIN                                                              04/16/2017 21:15:25 PAGE 5   
+
+ 234   1                  // CEX0, CEX1, CEX2 routed to Port pins
+ 235   1                  // ECI unavailable at Port pin
+ 236   1                  // T0 unavailable at Port pin
+ 237   1                  // T1 unavailable at Port pin
+ 238   1                  // T2 unavailable at Port pin
+ 239   1                  */
+ 240   1                 XBR1 = XBR1_PCA0ME__CEX0_TO_CEX2 | XBR1_ECIE__DISABLED | XBR1_T0E__DISABLED
+ 241   1                        | XBR1_T1E__DISABLED
+ 242   1                        | XBR1_T2E__DISABLED;
+ 243   1                 // [XBR1 - Port I/O Crossbar 1]$
+ 244   1                 // $[HFOSC1 Setup]
+ 245   1                  // [HFOSC1 Setup]$
+ 246   1      
+ 247   1                  // $[CLKSEL - Clock Select]
+ 248   1                  /*
+ 249   1                   // Clock derived from the Internal High Frequency Oscillator 0
+ 250   1                   // SYSCLK is equal to selected clock source divided by 1
+ 251   1                   */
+ 252   1                  CLKSEL = CLKSEL_CLKSL__HFOSC0 | CLKSEL_CLKDIV__SYSCLK_DIV_1;
+ 253   1                  while ((CLKSEL & CLKSEL_DIVRDY__BMASK) == CLKSEL_DIVRDY__NOT_READY){}
+ 254   1                    ;
+ 255   1                  // $[Timer Initialization]
+ 256   1                   // Save Timer Configuration
+ 257   1                   TMR3CN0_TR3_save = TMR3CN0 & TMR3CN0_TR3__BMASK;
+ 258   1                   // Stop Timer
+ 259   1                   TMR3CN0 &= ~(TMR3CN0_TR3__BMASK);
+ 260   1                   // [Timer Initialization]$
+ 261   1      
+ 262   1                   // $[TMR3CN1 - Timer 3 Control 1]
+ 263   1                   // [TMR3CN1 - Timer 3 Control 1]$
+ 264   1      
+ 265   1                   // $[TMR3CN0 - Timer 3 Control]
+ 266   1                   // [TMR3CN0 - Timer 3 Control]$
+ 267   1      
+ 268   1                   // $[TMR3H - Timer 3 High Byte]
+ 269   1                   /*
+ 270   1                    // Timer 3 High Byte = 0xF8
+ 271   1                    */
+ 272   1                   TMR3H = (0xF8 << TMR3H_TMR3H__SHIFT);
+ 273   1                   // [TMR3H - Timer 3 High Byte]$
+ 274   1      
+ 275   1                   // $[TMR3L - Timer 3 Low Byte]
+ 276   1                   /*
+ 277   1                    // Timer 3 Low Byte = 0x06
+ 278   1                    */
+ 279   1                   TMR3L = (0x06 << TMR3L_TMR3L__SHIFT);
+ 280   1                   // [TMR3L - Timer 3 Low Byte]$
+ 281   1      
+ 282   1                   // $[TMR3RLH - Timer 3 Reload High Byte]
+ 283   1                   /*
+ 284   1                    // Timer 3 Reload High Byte = 0xF8
+ 285   1                    */
+ 286   1                   TMR3RLH = (0xF8 << TMR3RLH_TMR3RLH__SHIFT);
+ 287   1                   // [TMR3RLH - Timer 3 Reload High Byte]$
+ 288   1      
+ 289   1                   // $[TMR3RLL - Timer 3 Reload Low Byte]
+ 290   1                   /*
+ 291   1                    // Timer 3 Reload Low Byte = 0x06
+ 292   1                    */
+ 293   1                   TMR3RLL = (0x06 << TMR3RLL_TMR3RLL__SHIFT);
+ 294   1                   // [TMR3RLL - Timer 3 Reload Low Byte]$
+ 295   1      
+ 296   1                   // $[TMR3CN0]
+C51 COMPILER V9.53.0.0   MAIN                                                              04/16/2017 21:15:25 PAGE 6   
+
+ 297   1                   /*
+ 298   1                    // Start Timer 3 running
+ 299   1                    */
+ 300   1                   TMR3CN0 |= TMR3CN0_TR3__RUN;
+ 301   1                   // [TMR3CN0]$
+ 302   1      
+ 303   1                   // $[Timer Restoration]
+ 304   1                   // Restore Timer Configuration
+ 305   1                   TMR3CN0 |= TMR3CN0_TR3_save;
+ 306   1                   // [Timer Restoration]$
+ 307   1      
+ 308   1                // [CLKSEL - Clock Select]$
+ 309   1                   // $[PCA Off]
+ 310   1                    PCA0CN0_CR = PCA0CN0_CR__STOP;
+ 311   1                    // [PCA Off]$
+ 312   1      
+ 313   1                    // $[PCA0MD - PCA Mode]
+ 314   1                    // [PCA0MD - PCA Mode]$
+ 315   1      
+ 316   1                    // $[PCA0CENT - PCA Center Alignment Enable]
+ 317   1                    // [PCA0CENT - PCA Center Alignment Enable]$
+ 318   1      
+ 319   1                    // $[PCA0CLR - PCA Comparator Clear Control]
+ 320   1                    // [PCA0CLR - PCA Comparator Clear Control]$
+ 321   1      
+ 322   1                    // $[PCA0L - PCA Counter/Timer Low Byte]
+ 323   1                    // [PCA0L - PCA Counter/Timer Low Byte]$
+ 324   1      
+ 325   1                    // $[PCA0H - PCA Counter/Timer High Byte]
+ 326   1                    // [PCA0H - PCA Counter/Timer High Byte]$
+ 327   1      
+ 328   1                    // $[PCA0POL - PCA Output Polarity]
+ 329   1                    // [PCA0POL - PCA Output Polarity]$
+ 330   1      
+ 331   1                    // $[PCA0PWM - PCA PWM Configuration]
+ 332   1                    // [PCA0PWM - PCA PWM Configuration]$
+ 333   1      
+ 334   1                    // $[PCA On]
+ 335   1                    PCA0CN0_CR = PCA0CN0_CR__RUN;
+ 336   1                  // [PCA On]$
+ 337   1                    // $[PCA0 Settings Save]
+ 338   1                    // Select Capture/Compare register)
+ 339   1                    PCA0PWM &= ~PCA0PWM_ARSEL__BMASK;
+ 340   1                    // [PCA0 Settings Save]$
+ 341   1      
+ 342   1                    // $[PCA0CPM0 - PCA Channel 0 Capture/Compare Mode]
+ 343   1                    /*
+ 344   1                     // Disable negative edge capture
+ 345   1                     // Disable CCF0 interrupts
+ 346   1                     // Enable match function
+ 347   1                     // 8 to 11-bit PWM selected
+ 348   1                     // Disable positive edge capture
+ 349   1                     // Enable comparator function
+ 350   1                     // Enable PWM function
+ 351   1                     // Disable toggle function
+ 352   1                     */
+ 353   1                    PCA0CPM0 = PCA0CPM0_CAPN__DISABLED
+ 354   1                               | PCA0CPM0_ECCF__DISABLED
+ 355   1                               | PCA0CPM0_MAT__ENABLED
+ 356   1                               | PCA0CPM0_PWM16__8_BIT
+ 357   1                               | PCA0CPM0_CAPP__DISABLED
+ 358   1                               | PCA0CPM0_ECOM__ENABLED
+ 359   1                               | PCA0CPM0_PWM__ENABLED
+C51 COMPILER V9.53.0.0   MAIN                                                              04/16/2017 21:15:25 PAGE 7   
+
+ 360   1                               | PCA0CPM0_TOG__DISABLED;
+ 361   1                    // [PCA0CPM0 - PCA Channel 0 Capture/Compare Mode]$
+ 362   1      
+ 363   1                    // $[PCA0CPL0 - PCA Channel 0 Capture Module Low Byte]
+ 364   1                    // [PCA0CPL0 - PCA Channel 0 Capture Module Low Byte]$
+ 365   1      
+ 366   1                    // $[PCA0CPH0 - PCA Channel 0 Capture Module High Byte]
+ 367   1                    // [PCA0CPH0 - PCA Channel 0 Capture Module High Byte]$
+ 368   1      
+ 369   1                    // $[Auto-reload]
+ 370   1                    // [Auto-reload]$
+ 371   1      
+ 372   1                    // $[PCA0 Settings Restore]
+ 373   1                  // [PCA0 Settings Restore]$
+ 374   1      
+ 375   1                    // $[SPI0CKR - SPI0 Clock Rate]
+ 376   1                     /*
+ 377   1                      // SPI0 Clock Rate = 0x0B
+ 378   1                      */
+ 379   1                     SPI0CKR = (0x0B << SPI0CKR_SPI0CKR__SHIFT);
+ 380   1                     // [SPI0CKR - SPI0 Clock Rate]$
+ 381   1      
+ 382   1                     // $[SPI0CFG - SPI0 Configuration]
+ 383   1                     /*
+ 384   1                      // Enable master mode. Operate as a master
+ 385   1                      */
+ 386   1                     SPI0CFG |= SPI0CFG_MSTEN__MASTER_ENABLED;
+ 387   1                     // [SPI0CFG - SPI0 Configuration]$
+ 388   1      
+ 389   1                     // $[SPI0PCF - SPI0 Pin Configuration]
+ 390   1                     // [SPI0PCF - SPI0 Pin Configuration]$
+ 391   1      
+ 392   1                     // $[SPI0CN0 - SPI0 Control]
+ 393   1                     /*
+ 394   1                      // Enable the SPI module
+ 395   1                      // 3-Wire Slave or 3-Wire Master Mode. NSS signal is not routed to a port
+ 396   1                      //     pin
+ 397   1                      */
+ 398   1                     SPI0CN0 &= ~SPI0CN0_NSSMD__FMASK;
+ 399   1                     SPI0CN0 |= SPI0CN0_SPIEN__ENABLED;
+ 400   1                     // [SPI0CN0 - SPI0 Control]$
+ 401   1      
+ 402   1                     // $[SPI0FCN0 - SPI0 FIFO Control 0]
+ 403   1                     // [SPI0FCN0 - SPI0 FIFO Control 0]$
+ 404   1      
+ 405   1                     // $[SPI0FCN1 - SPI0 FIFO Control 1]
+ 406   1                   // [SPI0FCN1 - SPI0 FIFO Control 1]$
+ 407   1                     // $[EIE1 - Extended Interrupt Enable 1]
+ 408   1                       /*
+ 409   1                        // Enable interrupt requests generated by the ADINT flag
+ 410   1                        // Disable ADC0 Window Comparison interrupt
+ 411   1                        // Disable CP0 interrupts
+ 412   1                        // Disable CP1 interrupts
+ 413   1                        // Disable all Port Match interrupts
+ 414   1                        // Disable all PCA0 interrupts
+ 415   1                        // Disable all SMB0 interrupts
+ 416   1                        // Enable interrupt requests generated by the TF3L or TF3H flags
+ 417   1                        */
+ 418   1                       EIE1 = EIE1_EADC0__ENABLED | EIE1_EWADC0__DISABLED | EIE1_ECP0__DISABLED
+ 419   1                              | EIE1_ECP1__DISABLED
+ 420   1                              | EIE1_EMAT__DISABLED | EIE1_EPCA0__DISABLED
+ 421   1                              | EIE1_ESMB0__DISABLED
+ 422   1                              | EIE1_ET3__ENABLED;
+C51 COMPILER V9.53.0.0   MAIN                                                              04/16/2017 21:15:25 PAGE 8   
+
+ 423   1                       // [EIE1 - Extended Interrupt Enable 1]$
+ 424   1      
+ 425   1                       // $[EIE2 - Extended Interrupt Enable 2]
+ 426   1                       // [EIE2 - Extended Interrupt Enable 2]$
+ 427   1      
+ 428   1                       // $[EIP1H - Extended Interrupt Priority 1 High]
+ 429   1                       // [EIP1H - Extended Interrupt Priority 1 High]$
+ 430   1      
+ 431   1                       // $[EIP1 - Extended Interrupt Priority 1 Low]
+ 432   1                       /*
+ 433   1                        // ADC0 Conversion Complete interrupt priority LSB set to high
+ 434   1                        // ADC0 Window interrupt priority LSB set to high
+ 435   1                        // CP0 interrupt priority LSB set to low
+ 436   1                        // CP1 interrupt priority LSB set to low
+ 437   1                        // Port Match interrupt priority LSB set to low
+ 438   1                        // PCA0 interrupt priority LSB set to low
+ 439   1                        // SMB0 interrupt priority LSB set to low
+ 440   1                        // Timer 3 interrupt priority LSB set to low
+ 441   1                        */
+ 442   1                       SFRPAGE = 0x10;
+ 443   1                       EIP1 = EIP1_PADC0__HIGH | EIP1_PWADC0__HIGH | EIP1_PCP0__LOW | EIP1_PCP1__LOW
+ 444   1                              | EIP1_PMAT__LOW
+ 445   1                              | EIP1_PPCA0__LOW | EIP1_PSMB0__LOW | EIP1_PT3__LOW;
+ 446   1                       // [EIP1 - Extended Interrupt Priority 1 Low]$
+ 447   1      
+ 448   1                       // $[EIP2 - Extended Interrupt Priority 2]
+ 449   1                       // [EIP2 - Extended Interrupt Priority 2]$
+ 450   1      
+ 451   1                       // $[EIP2H - Extended Interrupt Priority 2 High]
+ 452   1                       // [EIP2H - Extended Interrupt Priority 2 High]$
+ 453   1      
+ 454   1                       // $[IE - Interrupt Enable]
+ 455   1                       /*
+ 456   1                        // Disable all interrupt sources
+ 457   1                        // Disable external interrupt 0
+ 458   1                        // Disable external interrupt 1
+ 459   1                        // Enable interrupt requests generated by SPI0
+ 460   1                        // Disable all Timer 0 interrupt
+ 461   1                        // Disable all Timer 1 interrupt
+ 462   1                        // Enable interrupt requests generated by the TF2L or TF2H flags
+ 463   1                        // Disable UART0 interrupt
+ 464   1                        */
+ 465   1                       SFRPAGE = 0x00;
+ 466   1                       IE = IE_EA__DISABLED | IE_EX0__DISABLED | IE_EX1__DISABLED | IE_ESPI0__ENABLED
+ 467   1                            | IE_ET0__DISABLED
+ 468   1                            | IE_ET1__DISABLED | IE_ET2__ENABLED | IE_ES0__DISABLED;
+ 469   1                       // [IE - Interrupt Enable]$
+ 470   1      
+ 471   1                       // $[IP - Interrupt Priority]
+ 472   1                       // [IP - Interrupt Priority]$
+ 473   1      
+ 474   1                       // $[IPH - Interrupt Priority High]
+ 475   1                     // [IPH - Interrupt Priority High]$
+ 476   1      }
+ 477          
+ 478          
+ 479          
+ 480          int main (void)
+ 481          {
+ 482   1              int q;
+ 483   1              int j;
+ 484   1              init();
+ 485   1      
+C51 COMPILER V9.53.0.0   MAIN                                                              04/16/2017 21:15:25 PAGE 9   
+
+ 486   1              // timer 2 16 bit mode, 2MHz clock
+ 487   1      
+ 488   1              setupSysClock();
+ 489   1              TMR2CN0 = 2;
+ 490   1        // TODO still needs work
+ 491   1              //char SFRPAGE_SAVE = SFRPAGE;
+ 492   1              //SFRPAGE = 0x20;
+ 493   1              //      P3MDOUT = P3MDOUT_B0__OPEN_DRAIN | P3MDOUT_B1__PUSH_PULL
+ 494   1              //                      | P3MDOUT_B2__PUSH_PULL | P3MDOUT_B3__PUSH_PULL
+ 495   1              //                      | P3MDOUT_B4__PUSH_PULL | P3MDOUT_B7__OPEN_DRAIN;
+ 496   1              //      SFRPAGE = SFRPAGE_SAVE;
+ 497   1              P3_B4 = 1;
+ 498   1              P2_B6 = 1;
+ 499   1              IE_EA = 1;
+ 500   1              DISP_Init();
+*** WARNING C206 IN LINE 500 OF /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/src/main.c: 'DISP_Init': missing f
+             -unction-prototype
+ 501   1      
+ 502   1              setupTimer();
+ 503   1              disableWdt();
+ 504   1              performCountdown();
+ 505   1              start();
+ 506   1              // P1 B5 and P1 B6 as well
+ 507   1              renderCenteredText(5, "Stopwatch Timer");
+ 508   1              renderAndWriteHorizontalLine(17, 105, 13);
+ 509   1              renderAndWriteHorizontalLine(12, 115, 25);
+ 510   1              renderAndWriteHorizontalLine(12, 115, 53);
+ 511   1              renderCenteredText(60, "Lap Times");
+ 512   1              renderAndWriteHorizontalLine(35, 92, 68);
+ 513   1              renderAndWrite(20,75, "Lap 1");
+ 514   1              renderAndWriteHorizontalLine(12, 115, 83);
+ 515   1              renderAndWrite(20,90, "Lap 2");
+ 516   1              renderAndWriteHorizontalLine(12, 115, 98);
+ 517   1              renderAndWrite(20,105, "Lap 3");
+ 518   1              renderAndWriteHorizontalLine(12, 115, 113);
+ 519   1              renderAndWrite(20,120, "Lap 4");
+ 520   1              P1_B4 = 0;
+ 521   1              P1_B6 = 1;
+ 522   1              P1_B5 = 1;
+ 523   1              while (1) {
+ 524   2                      char str[10], l1[10], l2[10];//, l3[10], l4[10];
+ 525   2                      uint16_t timeInMilli = (int)getElapsedMillis();
+ 526   2                      uint16_t lap1 = 0, lap2 = 0;//, lap3 = 0, lap4 = 0;
+ 527   2                      sprintf(str, "%02d:%02d:%02d.%03d", timeInHours(timeInMilli), timeInMinutes(timeInMilli), timeInSeconds(
+             -timeInMilli), timeInMilliseconds(timeInMilli));
+ 528   2                      sprintf(l1, "Lap 1:     %02d:%02d:%02d.%03d", timeInHours(lap1), timeInMinutes(lap1), timeInSeconds(lap1), t
+             -imeInMilliseconds(lap1));
+ 529   2                      sprintf(l2, "Lap 2:     %02d:%02d:%02d.%03d", timeInHours(lap2), timeInMinutes(lap2), timeInSeconds(lap2), t
+             -imeInMilliseconds(lap2));
+ 530   2                      //sprintf(l3, "Lap 3:   %02d:%02d:%02d.%03d", timeInHours(lap3), timeInMinutes(lap3), timeInSeconds(lap3),
+             - timeInMilliseconds(lap3));
+ 531   2                      //sprintf(l4, "Lap 4:   %02d:%02d:%02d.%03d", timeInHours(lap4), timeInMinutes(lap4), timeInSeconds(lap4),
+             - timeInMilliseconds(lap4));
+ 532   2                      renderCenteredText(35, str);
+ 533   2                      renderAndWrite(20,75, l1);
+ 534   2                      renderAndWrite(20,75, l2);
+ 535   2                      //renderAndWrite(20,75,l3);
+ 536   2                      //renderAndWrite(20,75, l4);
+ 537   2                      P1_B4 = 0;
+ 538   2                      if(j==127){
+ 539   3                                              stopTimer();
+ 540   3                                              resetTimer();
+ 541   3                                      }
+C51 COMPILER V9.53.0.0   MAIN                                                              04/16/2017 21:15:25 PAGE 10  
+
+ 542   2                                      else{
+ 543   3                                      }
+ 544   2                      P1_B4 = j % 2;
+ 545   2                      j++;
+ 546   2                      // Spin forever
+ 547   2              }
+ 548   1      }
+*** WARNING C280 IN LINE 482 OF /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/src/main.c: 'q': unreferenced loca
+             -l variable
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    642    ----
+   CONSTANT SIZE    =    124    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      40
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  6 WARNING(S),  0 ERROR(S)

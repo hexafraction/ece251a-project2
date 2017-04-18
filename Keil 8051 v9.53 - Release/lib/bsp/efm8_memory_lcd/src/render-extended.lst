@@ -1,0 +1,214 @@
+C51 COMPILER V9.53.0.0   RENDER_EXTENDED                                                   04/16/2017 21:15:25 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE RENDER_EXTENDED
+OBJECT MODULE PLACED IN .\lib/bsp/efm8_memory_lcd/src/render-extended.OBJ
+COMPILER INVOKED BY: Z:\Applications\Simplicity Studio.app\Contents\Eclipse\developer\toolchains\keil_8051\9.53\BIN\C51.
+                    -exe /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/lib/bsp/efm8_memory_lcd/src/render-extended.c OMF2 SMALL DEBUG
+                    - OBJECTEXTEND ROM(LARGE) WARNINGLEVEL(2) FLOATFUZZY(3) OPTIMIZE(9,SPEED) DEFINE(NDEBUG=1) INTVECTOR(0X0000) INTPROMOTE I
+                    -NCDIR(/Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//Device/shared/si8051base;/Applica
+                    -tions/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4.0.3//Device/EFM8BB3/inc) REGFILE(timerlib.ORC) PRINT
+                    -(.\lib/bsp/efm8_memory_lcd/src/render-extended.lst) COND PAGEWIDTH(120) PAGELENGTH(65) OBJECT(.\lib/bsp/efm8_memory_lcd/
+                    -src/render-extended.OBJ)
+
+line level    source
+
+   1          /*
+   2           * render-extended.c
+   3           *
+   4           *  Created on: Apr 12, 2017
+   5           *      Author: rafi
+   6           */
+   7          
+   8          #include "bsp.h"
+*** WARNING C318 IN LINE 8 OF /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/lib/bsp/efm8_memory_lcd/src/render-e
+             -xtended.c: can't open file 'bsp.h'
+   9          #include "disp.h"
+*** WARNING C318 IN LINE 9 OF /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/lib/bsp/efm8_memory_lcd/src/render-e
+             -xtended.c: can't open file 'disp.h'
+  10          #include "../lib/bsp/efm8_memory_lcd/inc/render-extended.h"
+*** WARNING C318 IN LINE 8 OF ../lib/bsp/efm8_memory_lcd/inc/config/render_config.h: can't open file 'memory_lcd_config.
+             -h'
+*** WARNING C318 IN LINE 12 OF ../lib/bsp/efm8_memory_lcd/inc/render-extended.h: can't open file 'render.h'
+*** ERROR C141 IN LINE 44 OF ../lib/bsp/efm8_memory_lcd/inc/render-extended.h: syntax error near '(', expected ')'
+*** ERROR C141 IN LINE 44 OF ../lib/bsp/efm8_memory_lcd/inc/render-extended.h: syntax error near ')'
+*** ERROR C141 IN LINE 46 OF ../lib/bsp/efm8_memory_lcd/inc/render-extended.h: syntax error near '(', expected ')'
+*** ERROR C141 IN LINE 46 OF ../lib/bsp/efm8_memory_lcd/inc/render-extended.h: syntax error near ')'
+*** ERROR C141 IN LINE 48 OF ../lib/bsp/efm8_memory_lcd/inc/render-extended.h: syntax error near '(', expected ')'
+*** ERROR C141 IN LINE 48 OF ../lib/bsp/efm8_memory_lcd/inc/render-extended.h: syntax error near ')'
+*** ERROR C129 IN LINE 54 OF ../lib/bsp/efm8_memory_lcd/inc/render-extended.h: missing ';' before 'timeInMilliseconds'
+  11          #include <string.h>
+  12          
+  13          #include "thinfont.h"
+*** WARNING C318 IN LINE 13 OF /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/lib/bsp/efm8_memory_lcd/src/render-
+             -extended.c: can't open file 'thinfont.h'
+  14          #include "../lib/bsp/efm8_memory_lcd/inc/graphics/fatfont.h"
+  15          
+  16          static SI_SEGMENT_VARIABLE(line[16], uint8_t, RENDER_LINE_SEG);
+  17          
+  18          void renderText(int x, int y, SI_VARIABLE_SEGMENT_POINTER(str, char, RENDER_STR_SEG))
+  19          {
+  20              RENDER_StrLine(line, x, y, str);
+  21          }
+  22          
+  23          void renderFatNumbers(int posx, int posy, int printDigit)
+  24          {
+  25                  char c;
+  26                      uint8_t font_byte;
+  27          
+  28                      SI_VARIABLE_SEGMENT_POINTER(line16, uint16_t, RENDER_LINE_SEG);
+  29                  #if LSB == 0
+*** WARNING C322 IN LINE 29 OF /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/lib/bsp/efm8_memory_lcd/src/render-
+             -extended.c: unknown identifier
+  30                      uint16_t tmp = 0;
+  31                  #endif
+  32          
+C51 COMPILER V9.53.0.0   RENDER_EXTENDED                                                   04/16/2017 21:15:25 PAGE 2   
+
+  33                      // String is null-terminated
+  34          //          while (*str != '\0')
+  35          //          {
+  36          //              c = *str;
+  37          //
+  38          //              // Check for non-printable characters
+  39          //              if (c < ' ' || c > '~')
+  40          //              {
+  41          //                c = ' ';
+  42          //              }
+  43          //
+  44          //              // Don't write past the end of the line
+  45          //              if (posx > (DISP_WIDTH - FONT_MAP_SPACING))
+  46          //              {
+  47          //                  str++;
+  48          //                  posx += FONT_WIDTH;
+  49          //                  continue;
+  50          //              }
+  51          //
+  52          //              font_byte = thinfont_bits[(c - ' ') + thinfont_width / 8 * posy];
+  53          //
+  54          //              // Calculate position in line buffer
+  55          //              line16 = (SI_VARIABLE_SEGMENT_POINTER(, uint16_t, RENDER_LINE_SEG))(&line[posx / 8]);
+  56          //
+  57          //              // WARNING: This could be very dangerous without proper
+  58          //              // bounds checking as this technically touches the
+  59          //              // 17th byte of the 16 byte line buffer.
+  60          //              //
+  61          //              // However, we only allow posx to be 120 at max, which
+  62          //              // leaves div = 15, rem = 0, which means we effectively don't
+  63          //              // change the value of the 17th byte
+  64          //
+  65          //      #if LSB == 0
+  66          //              tmp = switchEndian(*line16);
+  67          //              tmp &= ~(0xFF00 >> posx % 8);
+  68          //              tmp |= (((uint16_t)font_byte << 8) >> (posx % 8));
+  69          //              *line16 = switchEndian(tmp);
+  70          //      #else
+  71          //              *line16 &= ~(0xFF00 >> posx % 8);
+  72          //              *line16 |= (((uint16_t)font_byte << 8) >> (posx % 8));
+  73          //      #endif
+  74          //
+  75          //              str++;
+  76          //              posx += FONT_WIDTH;
+  77          //          }
+  78                      // Don't write past the end of the line
+  79                      if (posx > (DISP_WIDTH - FONT_MAP_SPACING))
+  80                                  {
+  81                                      //str++;
+  82                                      posx += FONT_WIDTH;
+  83          //                          continue;
+  84                                  }
+  85          
+  86                                  font_byte = thinfont_bits[(c - ' ') + thinfont_width / 8 * posy];
+  87          
+  88                                  // Calculate position in line buffer
+  89                                  line16 = (SI_VARIABLE_SEGMENT_POINTER(, uint16_t, RENDER_LINE_SEG))(&line[posx / 8]);
+  90          
+  91                                  // WARNING: This could be very dangerous without proper
+  92                                  // bounds checking as this technically touches the
+  93                                  // 17th byte of the 16 byte line buffer.
+  94                                  //
+  95                                  // However, we only allow posx to be 120 at max, which
+C51 COMPILER V9.53.0.0   RENDER_EXTENDED                                                   04/16/2017 21:15:25 PAGE 3   
+
+  96                                  // leaves div = 15, rem = 0, which means we effectively don't
+  97                                  // change the value of the 17th byte
+  98          
+  99                          #if LSB == 0
+*** WARNING C322 IN LINE 99 OF /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/lib/bsp/efm8_memory_lcd/src/render-
+             -extended.c: unknown identifier
+ 100                                  tmp = switchEndian(*line16);
+ 101                                  tmp &= ~(0xFF00 >> posx % 8);
+ 102                                  tmp |= (((uint16_t)font_byte << 8) >> (posx % 8));
+ 103                                  *line16 = switchEndian(tmp);
+ 104                          #else
+                                      *line16 &= ~(0xFF00 >> posx % 8);
+                                      *line16 |= (((uint16_t)font_byte << 8) >> (posx % 8));
+                              #endif
+ 108          
+ 109                                  //str++;
+ 110                                  posx += FONT_WIDTH;
+ 111          }
+ 112          
+ 113          void renderCenteredText(int y, SI_VARIABLE_SEGMENT_POINTER(str, char, RENDER_STR_SEG))
+ 114          {
+ 115                  int x = (128-RENDER_GetStrSize(str))/2;
+ 116                  renderAndWrite(x, y, str);
+ 117                  RENDER_ClrLine(line);
+ 118          }
+ 119          
+ 120          void renderCircle(){
+ 121          
+ 122          }
+ 123          
+ 124          void renderAndWriteHorizontalLine(int xstart, int xend, int y){
+ 125                  RENDER_LineSegmentLine(line, xstart, xend);
+ 126                  DISP_WriteLine(y, line);
+ 127                  RENDER_ClrLine(line);
+ 128          }
+ 129          
+ 130          void renderAndWriteVerticalLine(int x, int ystart, int yend){
+ 131                  while(ystart <= yend){
+ 132                          RENDER_LineSegmentLine(line, x, x);
+ 133                          DISP_WriteLine(ystart, line);
+ 134                          ystart++;
+ 135                  }
+ 136                  RENDER_ClrLine(line);
+ 137          }
+ 138          
+ 139          void renderAndWrite(int x, int y, SI_VARIABLE_SEGMENT_POINTER(str, char, RENDER_STR_SEG)){
+ 140                  int internal_y;
+ 141                  for (internal_y = 0; internal_y < FONT_HEIGHT; internal_y++)
+ 142                          {
+ 143                             renderText(x, internal_y, str);
+ 144                             DISP_WriteLine(y+internal_y, line);
+ 145                          }
+ 146                  RENDER_ClrLine(line);
+ 147          }
+ 148          
+ 149          uint16_t timeInMilliseconds(uint16_t timeInMilli){
+ 150                  uint16_t timeInMilliseconds;
+ 151                  timeInMilliseconds = timeInMilli % 1000;
+ 152                  return timeInMilliseconds;
+ 153          }
+ 154          
+ 155          uint16_t timeInSeconds(uint16_t timeInMilli){
+ 156                  uint16_t timeInSeconds;
+C51 COMPILER V9.53.0.0   RENDER_EXTENDED                                                   04/16/2017 21:15:25 PAGE 4   
+
+ 157                  timeInSeconds = (timeInMilli / 1000) % 60;
+ 158                  return timeInSeconds;
+ 159          }
+ 160          
+ 161          uint16_t timeInMinutes(uint16_t timeInMilli){
+ 162                  uint16_t timeInMinutes;
+ 163                  timeInMinutes = (timeInMilli / 60000) % 60;
+ 164                  return timeInMinutes;
+ 165          }
+ 166          
+ 167          uint16_t timeInHours(uint16_t timeInMilli){
+ 168                  uint16_t timeInHours;
+ 169                  timeInHours = (timeInMilli / 3600000) % 24;
+ 170                  return timeInHours;
+ 171          }
+
+C51 COMPILATION COMPLETE.  7 WARNING(S),  7 ERROR(S)

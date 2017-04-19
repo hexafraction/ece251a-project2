@@ -1,0 +1,43 @@
+AX51 MACRO ASSEMBLER  WDT                                                                   04/14/17 15:43:04 PAGE     1
+
+
+MACRO ASSEMBLER AX51 V3.12.0.0
+OBJECT MODULE PLACED IN .\src\wdt.OBJ
+ASSEMBLER INVOKED BY: Z:\Applications\Simplicity Studio.app\Contents\Eclipse\developer\toolchains\keil_8051\9.53\BIN\AX5
+                      1.exe /Users/rafi/Documents/Code/ECE-251-A/ece251a-project2/src/wdt.SRC ERRORPRINT SET(SMALL) DEBU
+                      G MACRO NOMOD51 INCDIR(/Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks/8051/v4
+                      .0.3//Device/shared/si8051base;/Applications/Simplicity Studio.app/Contents/Eclipse/developer/sdks
+                      /8051/v4.0.3//Device/EFM8BB3/inc) PRINT(.\src\wdt.lst) COND SYMBOLS PAGEWIDTH(120) PAGELENGTH(65) OBJECT(.\src\wdt.OBJ) 
+
+LOC    OBJ             LINE     SOURCE
+
+                          1     ;  from pg 374 of datasheet
+                          2     ;?BI?wdtBits SEGMENT BIT
+                          3     ;RSEG ?BI?wdtBits
+                          4     ;FLAG:  DBIT 1
+ 00A8                     5     IE              DATA    0A8H
+ 00A8.7                   6     EA              BIT             IE.7 ; EA flag A8 bit 7
+                          7     ;WDTCN DATA 97H
+000000                    8     disableWdt:
+000000 C2AF               9        CLR EA             ; disable all interrupts
+000002 7597DE            10        MOV 097H,#0DEh    ; disable software watchdog timer
+000005 7597AD            11        MOV 097H,#0ADh
+000008 D2AF              12        SETB EA
+                         13        END
+AX51 MACRO ASSEMBLER  WDT                                                                   04/14/17 15:43:04 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E                    T Y P E  V A L U E     ATTRIBUTES
+
+DISABLEWDT. . . . . . . .  C  ADDR  0000H     R   SEG=?CO?WDT?0
+EA. . . . . . . . . . . .  B  ADDR  00A8H.7   A   
+IE. . . . . . . . . . . .  D  ADDR  00A8H     A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S).

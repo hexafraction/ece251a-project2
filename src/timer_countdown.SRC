@@ -20,6 +20,8 @@ delaySecond:
 		; we need to burn 765625 clocks, which is 125*125*49
 		; Inner loop: Decrement A, use JZ which takes 2 cycles most of the time
 		; this makes for 46 nops, dec A, jz
+	  MOV R6, #10 ;; this does one second for all three blinks; change to 30 for one second per blink
+	  jt_outer2:
 	  MOV R7, #125
 	  jt_outer:
 	  MOV A, #125
@@ -75,14 +77,25 @@ delaySecond:
 	  DEC R7
 	  MOV A, R7
 	  JNZ jt_outer ; need to have value in A for comparison
+	  DEC R6
+	  MOV A, R6
+	  JNZ jt_outer2
 	RET  	
 ; END OF performCountdown
 
 	PUBLIC performCountdown
 performCountdown:
+	;CLR 090H.4
+	CLR 090H.6
+	SETB 090H.5
+	SETB 090H.4
 	CALL delaySecond
+	CLR 090H.4
+	CALL delaySecond
+	SETB 090H.6
+	CALL delaySecond
+	SETB 090H.4
 	RET
-
 
 	PUBLIC disableWdt
 disableWdt:

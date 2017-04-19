@@ -6,6 +6,7 @@
  */
 #include <SI_EFM8BB3_Register_Enums.h>
 #include <SI_EFM8BB3_Defs.h>
+#include "timer_countdown.h"
 volatile bool timerEnabled = false;
 volatile long millisElapsed = 0;
 volatile int reset_low = 0;
@@ -16,10 +17,10 @@ unsigned char TMOD_SAVE;
 
 // puts system into 24.5MHz/32 clock
 void setupSysClock(){
-	CLKSEL = 0x50; // 0b01010000, meaning reset divider ready flag, divide by 32, source is HFOSC0 (24.5MHz)
+	//CLKSEL = 0x50; // 0b01010000, meaning reset divider ready flag, divide by 32, source is HFOSC0 (24.5MHz)
 	// actual system clock ends up being 765.625kHz
 	reset_low = 255-254; // 766%256
-	reset_high = 255-3; // 766/256, trunc
+	reset_high = 255-100; // 766/256, trunc
 }
 
 // overwrites state of timer 0
@@ -38,7 +39,7 @@ void setupTimer(){
 // disable interrupts since we don't know whether writing to a 32-bit volatile integer is atomic
 #pragma disable
 long getElapsedMillis(){
-	return millisElapsed;
+	return millisElapsed/8;
 }
 
 // disable the internal flag we use to track consistency, and restore the original TCON and TMOD registers.
@@ -73,7 +74,7 @@ void stopTimer(){
 }
 
 // the ISR itself.
-/*SI_INTERRUPT (TIMERLIB_TICK, TIMER0_IRQn) {
+SI_INTERRUPT (TIMERLIB_TICK, TIMER0_IRQn) {
 	if(!timerEnabled) return;
 	else {
 		millisElapsed = millisElapsed + 1;
@@ -81,4 +82,10 @@ void stopTimer(){
 		TL0 = reset_low;
 	}
 }
-*/
+
+//convenience function to give a countdown and start timer
+void start(){
+	performCountdown();
+	startTimer();
+}
+
